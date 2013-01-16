@@ -23,19 +23,49 @@ Number.prototype.mod = function(n) {
     return ((this%n)+n)%n;
 }
 
+// adapted from http://michalbe.blogspot.com/2011/02/javascript-random-numbers-with-custom.html
+var CustomRandom = function(x,y,s) {  
+  
+    var seed,  
+        constant = Math.pow(2, 13)+1,  
+        prime = 37,  
+        maximum = Math.pow(2, 50);  
+   
+    x = (x < 0) ? -x : x;
+    y = (y < 0) ? -y : y;
+
+    seed = (x * 13 * 13 + 1) + (y * 13 + 1) + s;
+
+    var nextfn = function() {  
+            seed *= constant;  
+            seed += prime;  
+            seed %= maximum;  
+              
+            return ~~(1024 * seed / maximum);
+        }  
+   
+    for(var i=0;i<10;i++) {
+        nextfn();
+    }
+
+    return {  
+        next : nextfn
+    }  
+}
+
 var getRectsIn = function(x1, y1, x2, y2, s) {
     var rects = [];
     var hs = s / 2;
 
     /* 12 zooms deep */
     var cycles = [
-        {size: 4194304, color:"#e20800"},
-        {size: 1048576, color:"#2d1e17"},
-        {size: 262144, color:"#f2af00"},
-        {size: 65536, color:"#2f4f9a"},
-        {size: 16384, color:"#c6bace"},
-        {size: 4096, color:"#e20800"},
-        {size: 1024, color:"#2d1e17"}
+        {size: 4194304, color:"#e20800", colors:["#e20800", "#2d1e17"]},
+        {size: 1048576, color:"#2d1e17", colors:["#2d1e17", "#f2af00"]},
+        {size: 262144,  color:"#f2af00", colors:["#f2af00", "#2f4f9a"]},
+        {size: 65536,   color:"#2f4f9a", colors:["#2f4f9a", "#c6bace"]},
+        {size: 16384,   color:"#c6bace", colors:["#c6bace", "#e20800"]},
+        {size: 4096,    color:"#e20800", colors:["#e20800", "#2d1e17"]},
+        {size: 1024,    color:"#2d1e17", colors:["#2d1e17", "#f2af00"]}
     ];
 
     var scalex = s / (x2 - x1);
@@ -43,7 +73,7 @@ var getRectsIn = function(x1, y1, x2, y2, s) {
 
     cycles.forEach(function(cy) {
         // short circuit out if features are too small
-        if(cy.size * scalex < 2) {
+        if(cy.size * scalex < 4) {
             return;
         }
         //?
@@ -69,13 +99,17 @@ var getRectsIn = function(x1, y1, x2, y2, s) {
 
         for(i=xmin; i<xmax; i+=dx) {
             for(j=ymin; j<ymax; j+=dy) {
-                if((i % (2*cy.size) == 0) && (j % (2*cy.size) == 0)) {
+                // if((i % (2*cy.size) == 0) && (j % (2*cy.size) == 0)) {
                 // if(((i + j) % (2*cy.size)) == 0) {
+                    var rng = CustomRandom(i, j, cy.size); 
                     c = {};
-                    c.color= cy.color;
+                    cindex = rng.next() < 512 ? 0 : 1;
+                    // c.color= cy.color;
+                    c.color = cy.colors[cindex];
                     c.rect = [(i-x1)*scalex, (j-y1)*scaley, dx*scalex, dy*scaley];
-                    rects.push(c);                
-                }
+                    if(rng.next() < 200)
+                        rects.push(c);                
+                // }
             }
         }
     })
@@ -112,6 +146,7 @@ tiles.drawTile = function(canvas, tile, zoom) {
     });
     // ctx.fillRect.apply(ctx, [ -40, -40, 100, 100]);
 
+/*
     ctx.fillStyle = 'black';
     ctx.fillText('rx: ' + MinX + ' - ' + MaxX, 20, 80);
     ctx.fillText('ry: ' + MinY + ' - ' + MaxY, 20, 90);
@@ -124,6 +159,7 @@ tiles.drawTile = function(canvas, tile, zoom) {
     ctx.lineTo(0, 255);
     ctx.closePath();
     ctx.stroke();
+*/
 }
 
 var map = new L.Map('map', {
