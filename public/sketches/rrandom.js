@@ -59,12 +59,19 @@ var getRectsIn = function(x1, y1, x2, y2, s) {
 
     /* 12 zooms deep */
     var cycles = [
+        {size: 8388608, color:"#e20800", colors:["#e20800", "#2d1e17"]},
         {size: 4194304, color:"#e20800", colors:["#e20800", "#2d1e17"]},
+        {size: 2097152, color:"#2d1e17", colors:["#2d1e17", "#f2af00"]},
         {size: 1048576, color:"#2d1e17", colors:["#2d1e17", "#f2af00"]},
+        {size: 524288,  color:"#f2af00", colors:["#f2af00", "#2f4f9a"]},
         {size: 262144,  color:"#f2af00", colors:["#f2af00", "#2f4f9a"]},
+        {size: 131072,  color:"#2f4f9a", colors:["#2f4f9a", "#c6bace"]},
         {size: 65536,   color:"#2f4f9a", colors:["#2f4f9a", "#c6bace"]},
+        {size: 32768,   color:"#c6bace", colors:["#c6bace", "#e20800"]},
         {size: 16384,   color:"#c6bace", colors:["#c6bace", "#e20800"]},
+        {size: 8192,    color:"#e20800", colors:["#e20800", "#2d1e17"]},
         {size: 4096,    color:"#e20800", colors:["#e20800", "#2d1e17"]},
+        {size: 2048,    color:"#2d1e17", colors:["#2d1e17", "#f2af00"]},
         {size: 1024,    color:"#2d1e17", colors:["#2d1e17", "#f2af00"]}
     ];
 
@@ -73,7 +80,7 @@ var getRectsIn = function(x1, y1, x2, y2, s) {
 
     cycles.forEach(function(cy) {
         // short circuit out if features are too small
-        if(cy.size * scalex < 4) {
+        if(cy.size * scalex < 8) {
             return;
         }
         //?
@@ -107,7 +114,7 @@ var getRectsIn = function(x1, y1, x2, y2, s) {
                     // c.color= cy.color;
                     c.color = cy.colors[cindex];
                     c.rect = [(i-x1)*scalex, (j-y1)*scaley, dx*scalex, dy*scaley];
-                    if(rng.next() < 200)
+                    if(rng.next() < 100)
                         rects.push(c);                
                 // }
             }
@@ -142,6 +149,12 @@ tiles.drawTile = function(canvas, tile, zoom) {
 
     rects.forEach(function (r) {
         ctx.fillStyle=r.color;
+        // if(r.rect[2] == 8) {
+        //     ctx.globalAlpha = 0.3;
+        // }
+        // else {
+        //     ctx.globalAlpha = 1.0;            
+        // }
         ctx.fillRect.apply(ctx, r.rect);
     });
     // ctx.fillRect.apply(ctx, [ -40, -40, 100, 100]);
@@ -163,10 +176,10 @@ tiles.drawTile = function(canvas, tile, zoom) {
 }
 
 var map = new L.Map('map', {
-    center: new L.LatLng(0,0), 
-    zoom: 2, 
+    center: new L.LatLng(10,10), 
+    zoom: 7, 
     minZoom: 0,
-    maxZoom: 16,
+    maxZoom: 7,
     layers: [tiles],
     attributionControl: false,    
     crs: L.CRS.Simple
