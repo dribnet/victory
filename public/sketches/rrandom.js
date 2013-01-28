@@ -1,23 +1,5 @@
 var tiles = new L.TileLayer.Canvas({continuousWorld: true});
 
-function get_random_color() {
-    var letters = '0123456789ABCDEF'.split('');
-    var color = '#';
-    for (var i = 0; i < 6; i++ ) {
-        color += letters[Math.round(Math.random() * 15)];
-    }
-    return color;
-}
-
-var lerp = function(t, a, b) {
-    return ( a + t * (b - a) );
-}
-
-// given a number x between x1 and x2, scale to 0..s
-var lerp_scale = function(x, x1, x2, s) {
-    return s * (x - x1) / (x2 - x1);
-}
-
 // http://stackoverflow.com/questions/4467539/javascript-modulo-not-behaving
 Number.prototype.mod = function(n) {
     return ((this%n)+n)%n;
