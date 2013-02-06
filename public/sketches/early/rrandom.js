@@ -36,6 +36,8 @@ var CustomRandom = function(x,y,s) {
 }
 
 var getRectsIn = function(x1, y1, x2, y2, s) {
+    console.log("RECTSIN : " + x1 + "," + y1 + "," + x2 + "," + y2 + "," + s);
+    console.log("RECTDIFF : " + (x2 - x1) + "," + (y2 - y1));
     var rects = [];
     var hs = s / 2;
 
@@ -86,6 +88,8 @@ var getRectsIn = function(x1, y1, x2, y2, s) {
         var i, j;
         var c = {};
 
+        console.log("xbounds: " + xmin + "," + xmax);
+
         for(i=xmin; i<xmax; i+=dx) {
             for(j=ymin; j<ymax; j+=dy) {
                 // if((i % (2*cy.size) == 0) && (j % (2*cy.size) == 0)) {
@@ -93,6 +97,7 @@ var getRectsIn = function(x1, y1, x2, y2, s) {
                     var rng = CustomRandom(i, j, cy.size); 
                     c = {};
                     cindex = rng.next() < 512 ? 0 : 1;
+                    // console.log("cindex is " + cindex);
                     // c.color= cy.color;
                     c.color = cy.colors[cindex];
                     c.rect = [(i-x1)*scalex, (j-y1)*scaley, dx*scalex, dy*scaley];
@@ -127,6 +132,8 @@ tiles.drawTile = function(canvas, tile, zoom) {
     var MinY = YStart + YDiff * tile.y / tileCount;
     var MaxY = MinY + YDiff / tileCount;                
 
+    // console.log("MaxX: " + MaxX);
+
     var rects = getRectsIn(MinX, MinY, MaxX, MaxY, 256);
 
     rects.forEach(function (r) {
@@ -137,6 +144,7 @@ tiles.drawTile = function(canvas, tile, zoom) {
         // else {
         //     ctx.globalAlpha = 1.0;            
         // }
+        // console.log("Drawing " + r.rect);
         ctx.fillRect.apply(ctx, r.rect);
     });
     // ctx.fillRect.apply(ctx, [ -40, -40, 100, 100]);
