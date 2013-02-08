@@ -55,20 +55,27 @@ var getRectsIn = function(x1, y1, x2, y2, s) {
 
     /* 12 zooms deep */
     var cycles = [
-        {size: 8388608, color:"#e20800", colors:["#e20800", "#2d1e17"]},
-        {size: 4194304, color:"#e20800", colors:["#e20800", "#2d1e17"]},
-        {size: 2097152, color:"#2d1e17", colors:["#2d1e17", "#f2af00"]},
-        {size: 1048576, color:"#2d1e17", colors:["#2d1e17", "#f2af00"]},
-        {size: 524288,  color:"#f2af00", colors:["#f2af00", "#2f4f9a"]},
-        {size: 262144,  color:"#f2af00", colors:["#f2af00", "#2f4f9a"]},
-        {size: 131072,  color:"#2f4f9a", colors:["#2f4f9a", "#c6bace"]},
-        {size: 65536,   color:"#2f4f9a", colors:["#2f4f9a", "#c6bace"]},
-        {size: 32768,   color:"#c6bace", colors:["#c6bace", "#e20800"]},
-        {size: 16384,   color:"#c6bace", colors:["#c6bace", "#e20800"]},
-        {size: 8192,    color:"#e20800", colors:["#e20800", "#2d1e17"]},
-        {size: 4096,    color:"#e20800", colors:["#e20800", "#2d1e17"]},
-        {size: 2048,    color:"#2d1e17", colors:["#2d1e17", "#f2af00"]},
-        {size: 1024,    color:"#2d1e17", colors:["#2d1e17", "#f2af00"]}
+        // {size: 8388608, color:"#e20800", colors:["#e20800", "#2d1e17"]},
+        // {size: 4194304, color:"#e20800", colors:["#e20800", "#2d1e17"]},
+        // {size: 2097152, color:"#2d1e17", colors:["#2d1e17", "#f2af00"]},
+        // {size: 1048576, color:"#2d1e17", colors:["#2d1e17", "#f2af00"]},
+        // {size: 524288,  color:"#f2af00", colors:["#f2af00", "#2f4f9a"]},
+        // {size: 262144,  color:"#f2af00", colors:["#f2af00", "#2f4f9a"]},
+        // {size: 131072,  color:"#2f4f9a", colors:["#2f4f9a", "#c6bace"]},
+        // {size: 65536,   color:"#2f4f9a", colors:["#2f4f9a", "#c6bace"]},
+        // {size: 32768,   color:"#c6bace", colors:["#c6bace", "#e20800"]},
+        // {size: 16384,   color:"#c6bace", colors:["#c6bace", "#e20800"]},
+        // {size: 8192,    color:"#e20800", colors:["#e20800", "#2d1e17"]},
+        // {size: 4096,    color:"#e20800", colors:["#e20800", "#2d1e17"]},
+        // {size: 2048,    color:"#2d1e17", colors:["#2d1e17", "#f2af00"]},
+        // {size: 1024,    color:"#2d1e17", colors:["#2d1e17", "#f2af00"]}
+
+        {size: 65536, thresh: 40, stretch: 3, colors:["#f50603", "#dba300", "#5b5c94", "#dfc4bd"]},
+        {size: 32768, thresh: 18, stretch: 3, colors:["#f50603", "#dba300", "#5b5c94", "#dfc4bd"]},
+        {size: 16384, thresh: 30, stretch: 4, colors:["#f50603", "#dba300", "#5b5c94"]},
+        // red, yellow, black, blue, grey
+        {size: 8192, thresh: 14, stretch: 18, colors:["#f50603", "#dba300", "#291f20", "#5b5c94", "#dfc4bd"]},
+
     ];
 
     var scalex = s / (x2 - x1);
@@ -79,6 +86,10 @@ var getRectsIn = function(x1, y1, x2, y2, s) {
         if(cy.size * scalex < 8) {
             return;
         }
+
+        var maxstretch = cy.stretch;
+
+
         //?
         // var size = cy.cize;
         // var color = cy.color;
@@ -86,14 +97,14 @@ var getRectsIn = function(x1, y1, x2, y2, s) {
         // iteration bounds
         // var xmin = cy.size * Math.floor(x1 / cy.size);
         // var xmax = cy.size * Math.floor((x2 + cy.size) / cy.size);
-        var xmin = x1 - x1.mod(cy.size);
-        var xmax = x2 - x2.mod(cy.size) + cy.size;
+        var xmin = x1 - (maxstretch * cy.size) - x1.mod(cy.size);
+        var xmax = x2 + (maxstretch * cy.size) - x2.mod(cy.size) + cy.size;
         var dx = cy.size;
         // var dx = (xmin < xmax) ? 10 : -10;
         // var ymin = cy.size * Math.floor(y1 / cy.size);
         // var ymax = cy.size * Math.floor((y2 + cy.size) / cy.size);
-        var ymin = y1 - y1.mod(cy.size);
-        var ymax = y2 - y2.mod(cy.size) + cy.size;
+        var ymin = y1 - (maxstretch * cy.size) - y1.mod(cy.size);
+        var ymax = y2 + (maxstretch * cy.size) - y2.mod(cy.size) + cy.size;
         var dy = cy.size;
         // var dy = (ymin < ymax) ? 10 : -10;
 
@@ -117,7 +128,7 @@ var getRectsIn = function(x1, y1, x2, y2, s) {
             }
         });
 
-        var Nthresh = 20;
+        var Nthresh = cy.thresh;
 
         var stepx = 0;
         for(i=xmin; i<xmax; i+=dx) {
@@ -133,8 +144,8 @@ var getRectsIn = function(x1, y1, x2, y2, s) {
                     c.size = scalex;
                     c.dir = rng.next() < 512 ? 0 : 1;
                     c.tstart = rng.next();
-                    c.extent1 = rng.next().mod(10);
-                    c.extent2 = rng.next().mod(10);
+                    c.extent1 = rng.next().mod(cy.stretch);
+                    c.extent2 = rng.next().mod(cy.stretch);
                     grid[stepx][stepy] = c;
                     runlist.insert(c);
                 }
@@ -149,9 +160,10 @@ var getRectsIn = function(x1, y1, x2, y2, s) {
             var c = runlist[n];
             if(c.dir) {
                 for(i=0-c.extent1;i<c.extent2;i++) {
-                    var rng = CustomRandom((c.x+i*dx), c.y, c.size); 
+                    var rng = CustomRandom((c.x+i*dx), c.y, cy.size); 
                     r = {};
-                    cindex = rng.next() < 512 ? 0 : 1;
+                    cindex = rng.next() % cy.colors.length;
+                    // cindex = rng.next() < 512 ? 0 : 1;
                     // console.log("cindex is " + cindex);
                     // c.color= cy.color;
                     r.color = cy.colors[cindex];
@@ -161,9 +173,10 @@ var getRectsIn = function(x1, y1, x2, y2, s) {
             }
             else {
                 for(j=0-c.extent1;j<c.extent2;j++) {
-                    var rng = CustomRandom(c.x, (c.y+j*dy), c.size); 
+                    var rng = CustomRandom(c.x, (c.y+j*dy), cy.size); 
                     r = {};
-                    cindex = rng.next() < 512 ? 0 : 1;
+                    cindex = rng.next() % cy.colors.length;
+                    // cindex = rng.next() < 512 ? 0 : 1;
                     // console.log("cindex is " + cindex);
                     // c.color= cy.color;
                     r.color = cy.colors[cindex];
@@ -198,7 +211,7 @@ var getRectsIn = function(x1, y1, x2, y2, s) {
 tiles.drawTile = function(canvas, tile, zoom) {
     var ctx = canvas.getContext('2d');
 
-    ctx.fillStyle = 'white';
+    ctx.fillStyle = '#fefef2';
     ctx.fillRect(0, 0, 256, 256);
 
     ctx.fillStyle = 'black';
@@ -251,7 +264,7 @@ tiles.drawTile = function(canvas, tile, zoom) {
 
 var map = new L.Map('map', {
     center: new L.LatLng(10,10), 
-    zoom: 7, 
+    zoom: 5, 
     minZoom: 0,
     maxZoom: 7,
     layers: [tiles],
