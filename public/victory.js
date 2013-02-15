@@ -289,11 +289,18 @@ var getRectsIn = function(x1, y1, x2, y2, s) {
         // {size: 2048,    color:"#2d1e17", colors:["#2d1e17", "#f2af00"]},
         // {size: 1024,    color:"#2d1e17", colors:["#2d1e17", "#f2af00"]}
 
+        // {size: 8388608, thresh: 40, stretch: 3, colors:["#fafffa", "#fffafa", "#fafaff", "#ffffff", "#fafafa"]},
+        {size: 134217728, thresh: 30, stretch: 4, colors:["#7777ee"]},
+        {size: 67108864, thresh: 30, stretch: 4, colors:["#8888ee"]},
+        {size: 4194304, thresh: 20, stretch: 2, colors:["#fcfffc"]},
+        {size: 2097152, thresh: 30, stretch: 8, colors:["#dfc4bd"]},
+        {size: 131072, thresh: 20, stretch: 2, colors:["#f50603"]},
         {size: 65536, thresh: 40, stretch: 3, colors:["#f50603", "#dba300", "#5b5c94", "#dfc4bd"]},
         {size: 32768, thresh: 18, stretch: 3, colors:["#f50603", "#dba300", "#5b5c94", "#dfc4bd"]},
         {size: 16384, thresh: 30, stretch: 4, colors:["#f50603", "#dba300", "#5b5c94"]},
         // red, yellow, black, blue, grey
         {size: 8192, thresh: 14, stretch: 18, colors:["#f50603", "#dba300", "#291f20", "#5b5c94", "#dfc4bd"]},
+        {size: 1024, thresh: 2, stretch: 4, colors:["#000000", "#dddddd", "#bbbbbb", "#999999"]},
 
     ];
 
@@ -302,7 +309,7 @@ var getRectsIn = function(x1, y1, x2, y2, s) {
 
     cycles.forEach(function(cy) {
         // short circuit out if features are too small
-        if(cy.size * scalex < 2) {
+        if(cy.size * scalex < 4) {
             return;
         }
 
@@ -430,7 +437,8 @@ var getRectsIn = function(x1, y1, x2, y2, s) {
 tiles.drawTile = function(canvas, tile, zoom) {
     var ctx = canvas.getContext('2d');
 
-    ctx.fillStyle = '#fefef2';
+    // ctx.fillStyle = '#fefef2';
+    ctx.fillStyle = '#eeeee2';
     ctx.fillRect(0, 0, 256, 256);
 
     ctx.fillStyle = 'black';
@@ -440,11 +448,11 @@ tiles.drawTile = function(canvas, tile, zoom) {
 */
     var tileCount = 1 << zoom;        
     var XStart = 0;
-    var XDiff = 4194304;          
+    var XDiff = 67108864;          
     var MinX = XStart + XDiff * tile.x / tileCount;
     var MaxX = MinX + XDiff / tileCount;                
     var YStart = 0;
-    var YDiff = 4194304;        
+    var YDiff = 67108864;        
     var MinY = YStart + YDiff * tile.y / tileCount;
     var MaxY = MinY + YDiff / tileCount;                
 
@@ -483,9 +491,9 @@ tiles.drawTile = function(canvas, tile, zoom) {
 
 var map = new L.Map('map', {
     center: new L.LatLng(10,10), 
-    zoom: 5, 
+    zoom: 7, 
     minZoom: 0,
-    maxZoom: 7,
+    maxZoom: 14,
     layers: [tiles],
     attributionControl: false,    
     crs: L.CRS.Simple
