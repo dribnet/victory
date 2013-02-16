@@ -96,7 +96,8 @@ var getRectsIn = function(x1, y1, x2, y2, s) {
         {index: 27, size: 67108864, thresh: 30, stretch: 2, colors:["#8888ee"]},
         {index: 23, size: 4194304, thresh: 2, stretch: 2, colors:["#fcfffc"]},
         {index: 22, size: 2097152, thresh: 30, stretch: 8, colors:["#dfc4bd", "#c4dfbd"]},
-        {index: 18, size: 131072, thresh: 20, stretch: 2, colors:["#f50603"]},
+        {index: 19, size: 262144, thresh: 5, stretch: 2, colors:["#f50603"], outcolors:["#46f543", "#63f546"]},
+        {index: 18, size: 131072, thresh: 20, stretch: 2, colors:["#f50603", "#dba300"], outcolors:["#06f503", "#13f506"]},
         {index: 17, size: 65536, thresh: 40, stretch: 3, colors:["#f50603", "#dba300", "#5b5c94", "#dfc4bd"]},
         {index: 16, size: 32768, thresh: 18, stretch: 3, colors:["#f50603", "#dba300", "#5b5c94", "#dfc4bd"]},
         {index: 15, size: 16384, thresh: 30, stretch: 4, colors:["#f50603", "#dba300", "#5b5c94"]},
@@ -197,7 +198,7 @@ var getRectsIn = function(x1, y1, x2, y2, s) {
                         cellSkip = true;
                 }
                 // city filter
-                if(!cellSkip && cy.index < 20) {
+                if(!cellSkip && cy.index < 18) {
                     // lookup city skip
                     var gridPoint = getPointAlignedToGrid(i, j, 4194304);
                     if(!recallCellProperty(map, gridPoint[0], gridPoint[1], 4194304, "active"))
@@ -236,7 +237,14 @@ var getRectsIn = function(x1, y1, x2, y2, s) {
                     // cindex = rng.next() < 512 ? 0 : 1;
                     // console.log("cindex is " + cindex);
                     // c.color= cy.color;
-                    r.color = cy.colors[cindex];
+                    var colors = cy.colors;
+                    if(cy.index == 19 || cy.index == 18) {
+                        // lookup out of city colors
+                        var gridPoint = getPointAlignedToGrid((c.x+i*dx), c.y, 4194304);
+                        if(!recallCellProperty(map, gridPoint[0], gridPoint[1], 4194304, "active"))
+                            colors = cy.outcolors;
+                    }
+                    r.color = colors[cindex];
                     r.rect = [(c.x-x1+i*dx)*scalex, (c.y-y1)*scaley, dx*scalex, dy*scaley];
                     rects.push(r);                
                     rememberCellProperty(map, (c.x+i*dx), c.y, dx, "active", true);
@@ -250,7 +258,14 @@ var getRectsIn = function(x1, y1, x2, y2, s) {
                     // cindex = rng.next() < 512 ? 0 : 1;
                     // console.log("cindex is " + cindex);
                     // c.color= cy.color;
-                    r.color = cy.colors[cindex];
+                    var colors = cy.colors;
+                    if(cy.index == 19 || cy.index == 18) {
+                        // lookup out of city colors
+                        var gridPoint = getPointAlignedToGrid(c.x, (c.y+j*dy), 4194304);
+                        if(!recallCellProperty(map, gridPoint[0], gridPoint[1], 4194304, "active"))
+                            colors = cy.outcolors;
+                    }
+                    r.color = colors[cindex];
                     r.rect = [(c.x-x1)*scalex, (c.y-y1+j*dy)*scaley, dx*scalex, dy*scaley];
                     rects.push(r);                
                     rememberCellProperty(map, c.x, (c.y+j*dy), dx, "active", true);
