@@ -65,20 +65,55 @@ var LINE = 1;
 var CROSS = 2;
 var POOL = 3;
 
+var indexSizeTable = {
+    14: 8192,
+    15: 16384,
+    16: 32768,
+    17: 65536
+};
+
+
+var cityGroup = [
+        {index: 17, size: 65536, thresh: 40, grow: LINE, minDrawSize: 8,
+            stretch: 3, colors:["#f50603", "#dba300", "#5b5c94", "#dfc4bd"]},
+        {index: 16, size: 32768, thresh: 18, grow: LINE, minDrawSize: 8,
+            stretch: 3, colors:["#f50603", "#dba300", "#5b5c94", "#dfc4bd"]},
+        {index: 15, size: 16384, thresh: 30, grow: LINE, minDrawSize: 8,
+            stretch: 4, colors:["#f50603", "#dba300", "#5b5c94"]},
+        // red, yellow, black, blue, grey
+        {index: 14, size: 8192, thresh: 14, grow: LINE,  minDrawSize: 8,
+            stretch: 18, colors:["#f50603", "#dba300", "#291f20", "#5b5c94", "#dfc4bd"]}
+    ];
+
+var peopleGroup = [
+        {index: 11, size: 1024, thresh: 2, grow: LINE,  minDrawSize: 4,
+            stretch: 2, colors:["#000000", "#dddddd", "#bbbbbb", "#999999"]}
+    ];
+
+var outerGroup = [
+        {index: 28, size: 134217728, thresh: 30, grow: LINE, minDrawSize: 8,
+            stretch: 4, colors:["#7777ee"]},
+        {index: 27, size: 67108864, thresh: 30, grow: LINE, minDrawSize: 8,
+            stretch: 2, colors:["#8888ee"]},
+        {index: 25, size: 16777216, thresh: 8, grow: POOL, minDrawSize: 8,
+            stretch: 4, colors:["#dfc4bd", "#c4dfbd"]},
+        {index: 24, size: 8388608, thresh: 8, grow: POOL, minDrawSize: 8,
+            stretch: 4, colors:["#dfc4bd", "#c4dfbd"]},
+        {index: 22, size: 2097152, thresh: 8, grow: POOL, minDrawSize: 8,
+            stretch: 5, colors:["#dfc4bd", "#c4dfbd"]},
+        {index: 23, size: 4194304, thresh: 2, grow: POOL,  minDrawSize: 4,
+            stretch: 2, colors:["#fcfffc"]},
+        {index: 19, size: 262144, thresh: 5, grow: CROSS, minDrawSize: 8,
+            stretch: 5, colors:["#f50603"], outcolors:["#46f543", "#63f546"]},
+        {index: 18, size: 131072, thresh: 20, grow: LINE, minDrawSize: 8,
+            stretch: 2, colors:["#f50603", "#dba300"], outcolors:["#06f503", "#13f506"]},
+    ];
+
 /* 12 zooms deep */
-var cycles = [
-    {index: 28, size: 134217728, thresh: 30, grow: LINE, stretch: 4, colors:["#7777ee"]},
-    {index: 27, size: 67108864, thresh: 30, grow: LINE, stretch: 2, colors:["#8888ee"]},
-    {index: 22, size: 2097152, thresh: 12, grow: POOL, stretch: 8, colors:["#dfc4bd", "#c4dfbd"]},
-    {index: 23, size: 4194304, thresh: 2, grow: LINE, stretch: 2, colors:["#fcfffc"]},
-    {index: 19, size: 262144, thresh: 5, grow: CROSS, stretch: 5, colors:["#f50603"], outcolors:["#46f543", "#63f546"]},
-    {index: 18, size: 131072, thresh: 20, grow: LINE, stretch: 2, colors:["#f50603", "#dba300"], outcolors:["#06f503", "#13f506"]},
-    {index: 17, size: 65536, thresh: 40, grow: LINE, stretch: 3, colors:["#f50603", "#dba300", "#5b5c94", "#dfc4bd"]},
-    {index: 16, size: 32768, thresh: 18, grow: LINE, stretch: 3, colors:["#f50603", "#dba300", "#5b5c94", "#dfc4bd"]},
-    {index: 15, size: 16384, thresh: 30, grow: LINE, stretch: 4, colors:["#f50603", "#dba300", "#5b5c94"]},
-    // red, yellow, black, blue, grey
-    {index: 14, size: 8192, thresh: 14, grow: LINE, stretch: 18, colors:["#f50603", "#dba300", "#291f20", "#5b5c94", "#dfc4bd"]},
-    {index: 11, size: 1024, thresh: 2, grow: LINE, stretch: 4, colors:["#000000", "#dddddd", "#bbbbbb", "#999999"]},
+var layerGroups = [
+    outerGroup,
+    cityGroup,
+    peopleGroup
 ];
 
 // var map = {};
@@ -100,7 +135,7 @@ var growSeed = function(c, x1, y1, scalex, scaley, rects, map, cy) {
                 r.color = poolColor;
                 r.rect = [(c.x-x1+i*cy.size)*scalex, (c.y-y1+j*cy.size)*scaley, cy.size*scalex, cy.size*scaley];
                 rects.push(r);                
-                rememberCellProperty(map, (c.y+j*cy.size), c.y, cy.size, "active", true);
+                rememberCellProperty(map, (c.x+i*cy.size), (c.y+j*cy.size), cy.size, "active", true);
             }
         }
     }
@@ -113,19 +148,31 @@ var growSeed = function(c, x1, y1, scalex, scaley, rects, map, cy) {
             // console.log("cindex is " + cindex);
             // c.color= cy.color;
             var abort = false;
-            if(cy.index == 19 || cy.index == 18) {
+            if(cy.index >= 14 && cy.index <= 17) {
                 // lookup out of city colors
                 var gridPoint = getPointAlignedToGrid((c.x+i*cy.size), c.y, 4194304);
                 var onCity = recallCellProperty(map, gridPoint[0], gridPoint[1], 4194304, "active");
-                if(onCity && cy.index == 19) {
-                    abort = true;
+                if(onCity) {
+                    for(var l=14; !abort && l<18; l++) {
+                        var cellSize = indexSizeTable[l];
+                        gridPoint = getPointAlignedToGrid((c.x+i*cy.size), c.y, cellSize);
+                        var onOther = recallCellProperty(map, gridPoint[0], gridPoint[1], cellSize, "active");
+                        if(onOther) {
+                            abort = true;
+                        }
+                    }
                 }
-                if(!onCity) {
-                    colors = cy.outcolors;                    
-                }
-                // else if(!onCity && cy == 18) {
-                //     colors = cy.outcolors;
-                // }
+                if(cy.index == 19 || cy.index == 18) {
+                    if(onCity && cy.index == 19) {
+                        abort = true;
+                    }
+                    if(!onCity) {
+                        colors = cy.outcolors;                    
+                    }
+                    // else if(!onCity && cy == 18) {
+                    //     colors = cy.outcolors;
+                    // }
+                }                
             }
             if(!abort) {            
                 r.color = colors[cindex];
@@ -144,15 +191,27 @@ var growSeed = function(c, x1, y1, scalex, scaley, rects, map, cy) {
             // console.log("cindex is " + cindex);
             // c.color= cy.color;
             var abort = false;
-            if(cy.index == 19 || cy.index == 18) {
+            if(cy.index >= 14 && cy.index <= 17) {
                 // lookup out of city colors
                 var gridPoint = getPointAlignedToGrid(c.x, (c.y+j*cy.size), 4194304);
                 var onCity = recallCellProperty(map, gridPoint[0], gridPoint[1], 4194304, "active");
-                if(onCity && cy.index == 19) {
-                    abort = true;
+                if(onCity) {
+                    for(var l=14; !abort && l<18; l++) {
+                        var cellSize = indexSizeTable[l];
+                        gridPoint = getPointAlignedToGrid(c.x, (c.y+j*cy.size), cellSize);
+                        var onOther = recallCellProperty(map, gridPoint[0], gridPoint[1], cellSize, "active");
+                        if(onOther) {
+                            abort = true;
+                        }
+                    }
                 }
-                if(!onCity) {
-                    colors = cy.outcolors;                    
+                if(cy.index == 19 || cy.index == 18) {
+                    if(onCity && cy.index == 19) {
+                        abort = true;
+                    }
+                    if(!onCity) {
+                        colors = cy.outcolors;                    
+                    }
                 }
             }
             if(!abort) {            
@@ -188,36 +247,8 @@ var getRectsIn = function(x1, y1, x2, y2, s) {
     var scaley = s / (y2 - y1);
 
     var map = {};
-    cycles.forEach(function(cy) {
-        // short circuit out if features are too small
-        if(cy.size * scalex < 8) {
-            return;
-        }
 
-        var maxstretch = cy.stretch;
-
-        // iteration bounds
-        var gridPoint = getPointAlignedToGrid(x1, y1, cy.size);
-        var dx = cy.size;
-        var dy = cy.size;
-        var size = cy.size;
-        xmin = gridPoint[0] - (maxstretch * dx);
-        ymin = gridPoint[1] - (maxstretch * dy);
-        gridPoint = getPointAlignedToGrid(x2, y2, cy.size);
-        xmax = gridPoint[0] + (maxstretch * dx) + dx;
-        ymax = gridPoint[1] + (maxstretch * dy) + dy;
-
-        var i, j, n;
-        var c = {};
-
-        // console.log("xbounds: " + xmin + "," + xmax);
-
-        // first pass, determine the grid of seeds
-        // the cells themselves
-        var grid = new Array((xmax-xmin)/dx);
-        // ordered list to run them later
-        // https://github.com/shinout/SortedList
-
+    layerGroups.forEach(function(lg) {
         // todo: runlist should exist across some layers
         var runlist = SortedList.create({
             compare:  function(a,b) {
@@ -229,67 +260,99 @@ var getRectsIn = function(x1, y1, x2, y2, s) {
             }
         });
 
-        var Nthresh = cy.thresh;
-
-        var stepx = 0;
-        for(i=xmin; i<xmax; i+=dx) {
-            grid[stepx] = new Array((ymax-ymin)/dy);
-            var stepy = 0;
-            for(j=ymin; j<ymax; j+=dy) {
-                var cellSkip = false;
-                // water filter
-                if(!cellSkip && cy.index == 27) {
-                    // lookup water skip
-                    var gridPoint = getPointAlignedToGrid(i, j, 134217728);
-                    if(!recallCellProperty(map, gridPoint[0], gridPoint[1], 134217728, "active"))
-                        cellSkip = true;
-                }
-                // nothing else on water for now
-                if(!cellSkip && cy.index > 20 && cy.index < 27) {
-                    // lookup water skip
-                    var gridPoint = getPointAlignedToGrid(i, j, 134217728);
-                    if(recallCellProperty(map, gridPoint[0], gridPoint[1], 134217728, "active"))
-                        cellSkip = true;
-                }
-                // don't cover up cities before layer 18
-                if(!cellSkip && cy.index > 20 && cy.index < 23) {
-                    // lookup city skip
-                    var gridPoint = getPointAlignedToGrid(i, j, 4194304);
-                    if(recallCellProperty(map, gridPoint[0], gridPoint[1], 4194304, "active"))
-                        cellSkip = true;
-                }
-                // city filter
-                if(!cellSkip && cy.index < 18) {
-                    // lookup city skip
-                    var gridPoint = getPointAlignedToGrid(i, j, 4194304);
-                    if(!recallCellProperty(map, gridPoint[0], gridPoint[1], 4194304, "active"))
-                        cellSkip = true;
-                }
-                if(!cellSkip) {
-                    var rng = CustomRandom(i, j, cy.size);
-                    var n = rng.next();
-                    if(n < Nthresh) {
-                        c = {};
-                        c.x = i;
-                        c.y = j;
-                        c.size = scalex;
-                        c.dir = rng.next() < 512 ? 0 : 1;
-                        c.tstart = rng.next();
-                        c.extent1 = rng.next().mod(cy.stretch);
-                        c.extent2 = rng.next().mod(cy.stretch);
-                        grid[stepx][stepy] = c;
-                        runlist.insert(c);
-                    }
-                }
-                stepy += 1;
+        lg.forEach(function(cy) {
+            // short circuit out if features are too small
+            if(cy.size * scalex < cy.minDrawSize) {
+                return;
             }
-            stepx += 1;
-        }
+
+            var maxstretch = cy.stretch;
+
+            // iteration bounds
+            var gridPoint = getPointAlignedToGrid(x1, y1, cy.size);
+            var dx = cy.size;
+            var dy = cy.size;
+            var size = cy.size;
+            xmin = gridPoint[0] - (maxstretch * dx);
+            ymin = gridPoint[1] - (maxstretch * dy);
+            gridPoint = getPointAlignedToGrid(x2, y2, cy.size);
+            xmax = gridPoint[0] + (maxstretch * dx) + dx;
+            ymax = gridPoint[1] + (maxstretch * dy) + dy;
+
+            var i, j, n;
+            var c = {};
+
+            // console.log("xbounds: " + xmin + "," + xmax);
+
+            // first pass, determine the grid of seeds
+            // the cells themselves
+            var grid = new Array((xmax-xmin)/dx);
+            // ordered list to run them later
+            // https://github.com/shinout/SortedList
+
+            var Nthresh = cy.thresh;
+
+            var stepx = 0;
+            for(i=xmin; i<xmax; i+=dx) {
+                grid[stepx] = new Array((ymax-ymin)/dy);
+                var stepy = 0;
+                for(j=ymin; j<ymax; j+=dy) {
+                    var cellSkip = false;
+                    // water filter
+                    if(!cellSkip && cy.index == 27) {
+                        // lookup water skip
+                        var gridPoint = getPointAlignedToGrid(i, j, 134217728);
+                        if(!recallCellProperty(map, gridPoint[0], gridPoint[1], 134217728, "active"))
+                            cellSkip = true;
+                    }
+                    // nothing else on water for now
+                    if(!cellSkip && cy.index > 20 && cy.index < 27) {
+                        // lookup water skip
+                        var gridPoint = getPointAlignedToGrid(i, j, 134217728);
+                        if(recallCellProperty(map, gridPoint[0], gridPoint[1], 134217728, "active"))
+                            cellSkip = true;
+                    }
+                    // don't cover up cities before layer 18
+                    if(!cellSkip && cy.index > 20 && cy.index < 23) {
+                        // lookup city skip
+                        var gridPoint = getPointAlignedToGrid(i, j, 4194304);
+                        if(recallCellProperty(map, gridPoint[0], gridPoint[1], 4194304, "active"))
+                            cellSkip = true;
+                    }
+                    // city filter
+                    if(!cellSkip && cy.index < 18) {
+                        // lookup city skip
+                        var gridPoint = getPointAlignedToGrid(i, j, 4194304);
+                        if(!recallCellProperty(map, gridPoint[0], gridPoint[1], 4194304, "active"))
+                            cellSkip = true;
+                    }
+                    if(!cellSkip) {
+                        var rng = CustomRandom(i, j, cy.size);
+                        var n = rng.next();
+                        if(n < Nthresh) {
+                            c = {};
+                            c.cy = cy;
+                            c.x = i;
+                            c.y = j;
+                            c.size = scalex;
+                            c.dir = rng.next() < 512 ? 0 : 1;
+                            c.tstart = rng.next();
+                            c.extent1 = rng.next().mod(cy.stretch);
+                            c.extent2 = rng.next().mod(cy.stretch);
+                            grid[stepx][stepy] = c;
+                            runlist.insert(c);
+                        }
+                    }
+                    stepy += 1;
+                }
+                stepx += 1;
+            }
+        })
 
         var r = {};
         // console.log("---");
         for(n=0;n<runlist.length;n++) {
-            growSeed(runlist[n], x1, y1, scalex, scaley, rects, map, cy);
+            growSeed(runlist[n], x1, y1, scalex, scaley, rects, map, runlist[n].cy);
         }
     })
 
