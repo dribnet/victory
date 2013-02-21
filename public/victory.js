@@ -210,7 +210,7 @@ var getRectsIn = function(x1, y1, x2, y2, s) {
         var i, j, n;
         var c = {};
 
-        console.log("xbounds: " + xmin + "," + xmax);
+        // console.log("xbounds: " + xmin + "," + xmax);
 
         // first pass, determine the grid of seeds
         // the cells themselves
@@ -310,11 +310,11 @@ tiles.drawTile = function(canvas, tile, zoom) {
 */
     var tileCount = 1 << zoom;        
     var XStart = 0;
-    var XDiff = 67108864;          
+    var XDiff = 268435456;          
     var MinX = XStart + XDiff * tile.x / tileCount;
     var MaxX = MinX + XDiff / tileCount;                
     var YStart = 0;
-    var YDiff = 67108864;        
+    var YDiff = 268435456;        
     var MinY = YStart + YDiff * tile.y / tileCount;
     var MaxY = MinY + YDiff / tileCount;                
 
@@ -334,29 +334,25 @@ tiles.drawTile = function(canvas, tile, zoom) {
         ctx.fillRect.apply(ctx, r.rect);
     });
     // ctx.fillRect.apply(ctx, [ -40, -40, 100, 100]);
-
-/*
-    ctx.fillStyle = 'black';
-    ctx.fillText('rx: ' + MinX + ' - ' + MaxX, 20, 80);
-    ctx.fillText('ry: ' + MinY + ' - ' + MaxY, 20, 90);
-
-    ctx.strokeStyle = 'red';
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.lineTo(255, 0);
-    ctx.lineTo(255, 255);
-    ctx.lineTo(0, 255);
-    ctx.closePath();
-    ctx.stroke();
-*/
 }
 
 var map = new L.Map('map', {
-    center: new L.LatLng(10,10), 
-    zoom: 1, 
+    center: new L.LatLng(39.96094, -37.90723), 
+    zoom: 10, 
     minZoom: 0,
-    maxZoom: 12,
+    maxZoom: 14,
     layers: [tiles],
     attributionControl: false,    
     crs: L.CRS.Simple
 });
+
+var popup = L.popup();
+
+function onMapClick(e) {
+    popup
+        .setLatLng(e.latlng)
+        .setContent("You clicked the map at " + e.latlng.toString())
+        .openOn(map);
+}
+
+map.on('click', onMapClick);
