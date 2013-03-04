@@ -69,6 +69,7 @@ var recallCellProperty = function (map, x, y, s, k) {
 var LINE = 1;
 var CROSS = 2;
 var POOL = 3;
+var CLOUD = 3;
 
 var indexSizeTable = {
     14: 8192,
@@ -78,16 +79,20 @@ var indexSizeTable = {
     18: 131072
 };
 
+var buildingGroup = [
+        {index: 18, size: 131072, thresh: 80, grow: LINE, minDrawSize: 8, minstretch: 1,
+            stretch: 3, zcolors:["#000000"], colors:["#5b5c94", "#f50603", "#dba300"], outcolors:["#06f503", "#13f506"]},
+        {index: 17, size: 65536, thresh: 50, grow: LINE, minDrawSize: 8, minstretch: 1,
+            stretch: 3, zcolors:["#000000"], colors:["#f50603", "#dba300", "#5b5c94", "#dfc4bd"], outcolors:["#06f503", "#13f506"]}
+]
 
 var cityGroup = [
-        {index: 18, size: 131072, thresh: 20, grow: LINE, minDrawSize: 8, minstretch: 1,
-            stretch: 2, zcolors:["000000"], colors:["#f50603", "#dba300"], outcolors:["#06f503", "#13f506"]},
-        {index: 17, size: 65536, thresh: 140, grow: LINE, minDrawSize: 8, minstretch: 1,
+        {index: 17, size: 65536, thresh: 100, grow: LINE, minDrawSize: 8, minstretch: 1,
             stretch: 2, colors:["#f50603", "#dba300", "#5b5c94", "#dfc4bd"]},
         {index: 16, size: 32768, thresh: 100, grow: LINE, minDrawSize: 8, minstretch: 1,
             stretch: 3, colors:["#f50603", "#dba300", "#5b5c94", "#dfc4bd"]},
-        {index: 15, size: 16384, thresh: 1, grow: LINE, minDrawSize: 8, minstretch: 1,
-            stretch: 2, colors:["#f50603", "#dba300", "#5b5c94"], outcolors:['#00FF00']},
+        {index: 15, size: 16384, thresh: 7, grow: LINE, minDrawSize: 8, minstretch: 6,
+            stretch: 7, colors:["#f50603", "#dba300", "#5b5c94"], outcolors:['#00FF00']},
         // red, yellow, black, blue, grey
         {index: 14, size: 8192, thresh: 9, grow: LINE,  minDrawSize: 8, minstretch: 22,
             stretch: 24, colors:["#f50603", "#dba300", "#291f20", "#5b5c94", "#dfc4bd"], outcolors:['#00FF00']}
@@ -95,7 +100,7 @@ var cityGroup = [
 
 var peopleGroup = [
         {index: 11, size: 1024, thresh: 2, grow: LINE,  minDrawSize: 4, minstretch: 1,
-            stretch: 2, colors:["#000000", "#dddddd", "#bbbbbb", "#999999"]}
+            stretch: 2, colors:["#F0E68C", "#EEDC82", "#8B6508", "#EECFA1"]}
     ];
 
 var outerGroup = [
@@ -118,6 +123,7 @@ var outerGroup = [
 /* 12 zooms deep */
 var layerGroups = [
     outerGroup,
+    buildingGroup,
     cityGroup,
     peopleGroup
 ];
@@ -144,6 +150,9 @@ var growSeed = function(c, x1, y1, scalex, scaley, rects, map, cy) {
                 rememberCellProperty(map, (c.x+i*cy.size), (c.y+j*cy.size), cy.size, "active", true);
             }
         }
+    }
+    if(cy.grow == CLOUD) {
+        rng = CustomRandom(curx, cury, cy.size);  
     }
     if(cy.grow == CROSS || (cy.grow == LINE)) {
         var i, dual, abort;
@@ -172,12 +181,12 @@ var growSeed = function(c, x1, y1, scalex, scaley, rects, map, cy) {
                 rng = CustomRandom(curx, cury, cy.size);  
                 r = {};
                 cindex = rng.next() % cy.colors.length;
-                if(cy.index >= 14 && cy.index <= 17) {
+                if(cy.index >= 11 && cy.index <= 19) {
                     // lookup out of city colors
                     var gridPoint = getPointAlignedToGrid(curx, cury, 4194304);
                     var onCity = recallCellProperty(map, gridPoint[0], gridPoint[1], 4194304, "active");
                     if(onCity) {
-                        for(var l=14; !abort && l<=18; l++) {
+                        for(var l=11; !abort && l<=18; l++) {
                             var cellSize = indexSizeTable[l];
                             gridPoint = getPointAlignedToGrid(curx, cury, cellSize);
                             var onOther = recallCellProperty(map, gridPoint[0], gridPoint[1], cellSize, "active");
@@ -292,7 +301,7 @@ var getRectsIn = function(x1, y1, x2, y2, s) {
                             cellSkip = true;
                     }
                     // nothing else on water for now
-                    if(!cellSkip && cy.index > 20 && cy.index < 27) {
+                    if(!cellSkip && cy.index > 18 && cy.index < 27) {
                         // lookup water skip
                         var gridPoint = getPointAlignedToGrid(i, j, 134217728);
                         if(recallCellProperty(map, gridPoint[0], gridPoint[1], 134217728, "active"))
@@ -386,7 +395,8 @@ tiles.drawTile = function(canvas, tile, zoom) {
 }
 
 var map = new L.Map('map', {
-    center: new L.LatLng(543.03418, 1231.83008), 
+    center: new L.LatLng(542.0791, 1233.4502), 
+    // 538.25684, 1229.37695
     zoom: 10, 
     minZoom: 0,
     maxZoom: 14,
