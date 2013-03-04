@@ -1,3 +1,8 @@
+// notes: chris says:
+// clip hangers
+// more big squares
+// prevent odd color shapes (limit 3, etc.)
+
 var tiles = new L.TileLayer.Canvas({continuousWorld: true});
 
 // http://stackoverflow.com/questions/4467539/javascript-modulo-not-behaving
@@ -74,15 +79,15 @@ var indexSizeTable = {
 
 
 var cityGroup = [
-        {index: 17, size: 65536, thresh: 40, grow: LINE, minDrawSize: 8,
+        {index: 17, size: 65536, thresh: 60, grow: LINE, minDrawSize: 8,
             stretch: 3, colors:["#f50603", "#dba300", "#5b5c94", "#dfc4bd"]},
-        {index: 16, size: 32768, thresh: 18, grow: LINE, minDrawSize: 8,
+        {index: 16, size: 32768, thresh: 30, grow: LINE, minDrawSize: 8,
             stretch: 3, colors:["#f50603", "#dba300", "#5b5c94", "#dfc4bd"]},
         {index: 15, size: 16384, thresh: 30, grow: LINE, minDrawSize: 8,
             stretch: 4, colors:["#f50603", "#dba300", "#5b5c94"]},
         // red, yellow, black, blue, grey
-        {index: 14, size: 8192, thresh: 14, grow: LINE,  minDrawSize: 8,
-            stretch: 18, colors:["#f50603", "#dba300", "#291f20", "#5b5c94", "#dfc4bd"]}
+        {index: 14, size: 8192, thresh: 5, grow: LINE,  minDrawSize: 8,
+            stretch: 20, colors:["#f50603", "#dba300", "#291f20", "#5b5c94", "#dfc4bd"]}
     ];
 
 var peopleGroup = [
@@ -102,7 +107,7 @@ var outerGroup = [
         {index: 22, size: 2097152, thresh: 8, grow: POOL, minDrawSize: 8,
             stretch: 5, colors:["#dfc4bd", "#c4dfbd"]},
         {index: 23, size: 4194304, thresh: 2, grow: POOL,  minDrawSize: 4,
-            stretch: 2, colors:["#fcfffc"]},
+            stretch: 4, colors:["#fcfffc"]},
         {index: 19, size: 262144, thresh: 5, grow: CROSS, minDrawSize: 8,
             stretch: 5, colors:["#f50603"], outcolors:["#46f543", "#63f546"]},
         {index: 18, size: 131072, thresh: 20, grow: LINE, minDrawSize: 8,
@@ -401,11 +406,13 @@ tiles.drawTile = function(canvas, tile, zoom) {
 
 var map = new L.Map('map', {
     center: new L.LatLng(39.96094, -37.90723), 
-    zoom: 10, 
+    zoom: 11, 
     minZoom: 0,
     maxZoom: 14,
     layers: [tiles],
-    attributionControl: false,    
+    attributionControl: false,
+    // fadeAnimation: true,
+    // zoomAnimation: true,
     crs: L.CRS.Simple
 });
 
