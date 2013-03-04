@@ -74,44 +74,45 @@ var indexSizeTable = {
     14: 8192,
     15: 16384,
     16: 32768,
-    17: 65536
+    17: 65536,
+    18: 131072
 };
 
 
 var cityGroup = [
-        {index: 17, size: 65536, thresh: 60, grow: LINE, minDrawSize: 8,
+        {index: 18, size: 131072, thresh: 20, grow: LINE, minDrawSize: 8, minstretch: 1,
+            stretch: 2, zcolors:["000000"], colors:["#f50603", "#dba300"], outcolors:["#06f503", "#13f506"]},
+        {index: 17, size: 65536, thresh: 140, grow: LINE, minDrawSize: 8, minstretch: 1,
+            stretch: 2, colors:["#f50603", "#dba300", "#5b5c94", "#dfc4bd"]},
+        {index: 16, size: 32768, thresh: 100, grow: LINE, minDrawSize: 8, minstretch: 1,
             stretch: 3, colors:["#f50603", "#dba300", "#5b5c94", "#dfc4bd"]},
-        {index: 16, size: 32768, thresh: 30, grow: LINE, minDrawSize: 8,
-            stretch: 3, colors:["#f50603", "#dba300", "#5b5c94", "#dfc4bd"]},
-        {index: 15, size: 16384, thresh: 30, grow: LINE, minDrawSize: 8,
-            stretch: 4, colors:["#f50603", "#dba300", "#5b5c94"]},
+        {index: 15, size: 16384, thresh: 1, grow: LINE, minDrawSize: 8, minstretch: 1,
+            stretch: 2, colors:["#f50603", "#dba300", "#5b5c94"], outcolors:['#00FF00']},
         // red, yellow, black, blue, grey
-        {index: 14, size: 8192, thresh: 5, grow: LINE,  minDrawSize: 8,
-            stretch: 20, colors:["#f50603", "#dba300", "#291f20", "#5b5c94", "#dfc4bd"]}
+        {index: 14, size: 8192, thresh: 9, grow: LINE,  minDrawSize: 8, minstretch: 22,
+            stretch: 24, colors:["#f50603", "#dba300", "#291f20", "#5b5c94", "#dfc4bd"], outcolors:['#00FF00']}
     ];
 
 var peopleGroup = [
-        {index: 11, size: 1024, thresh: 2, grow: LINE,  minDrawSize: 4,
+        {index: 11, size: 1024, thresh: 2, grow: LINE,  minDrawSize: 4, minstretch: 1,
             stretch: 2, colors:["#000000", "#dddddd", "#bbbbbb", "#999999"]}
     ];
 
 var outerGroup = [
-        {index: 28, size: 134217728, thresh: 30, grow: LINE, minDrawSize: 8,
+        {index: 28, size: 134217728, thresh: 30, grow: LINE, minDrawSize: 8, minstretch: 1,
             stretch: 4, colors:["#7777ee"]},
-        {index: 27, size: 67108864, thresh: 30, grow: LINE, minDrawSize: 8,
+        {index: 27, size: 67108864, thresh: 30, grow: LINE, minDrawSize: 8, minstretch: 1,
             stretch: 2, colors:["#8888ee"]},
-        {index: 25, size: 16777216, thresh: 8, grow: POOL, minDrawSize: 8,
+        {index: 25, size: 16777216, thresh: 8, grow: POOL, minDrawSize: 8, minstretch: 1,
             stretch: 4, colors:["#dfc4bd", "#c4dfbd"]},
-        {index: 24, size: 8388608, thresh: 8, grow: POOL, minDrawSize: 8,
+        {index: 24, size: 8388608, thresh: 8, grow: POOL, minDrawSize: 8, minstretch: 1,
             stretch: 4, colors:["#dfc4bd", "#c4dfbd"]},
-        {index: 22, size: 2097152, thresh: 8, grow: POOL, minDrawSize: 8,
+        {index: 22, size: 2097152, thresh: 8, grow: POOL, minDrawSize: 8, minstretch: 1,
             stretch: 5, colors:["#dfc4bd", "#c4dfbd"]},
-        {index: 23, size: 4194304, thresh: 2, grow: POOL,  minDrawSize: 4,
-            stretch: 4, colors:["#fcfffc"]},
-        {index: 19, size: 262144, thresh: 5, grow: CROSS, minDrawSize: 8,
+        {index: 23, size: 4194304, thresh: 1, grow: POOL,  minDrawSize: 4, minstretch: 1,
+            stretch: 2, colors:["#fcfffc"]},
+        {index: 19, size: 262144, thresh: 5, grow: CROSS, minDrawSize: 8, minstretch: 1,
             stretch: 5, colors:["#f50603"], outcolors:["#46f543", "#63f546"]},
-        {index: 18, size: 131072, thresh: 20, grow: LINE, minDrawSize: 8,
-            stretch: 2, colors:["#f50603", "#dba300"], outcolors:["#06f503", "#13f506"]},
     ];
 
 /* 12 zooms deep */
@@ -145,54 +146,67 @@ var growSeed = function(c, x1, y1, scalex, scaley, rects, map, cy) {
         }
     }
     if(cy.grow == CROSS || (cy.grow == LINE)) {
-        for(i=0-c.extent1;i<c.extent2;i++) {
-            var rng;
-            var curx, cury;
-            if(c.dir) {
-                curx = (c.x+i*cy.size);
-                cury = c.y;
+        var i, dual, abort;
+        for (dual=0; dual<2; dual++) {
+            abort = false;
+            var start = 0;
+            var inc = 1;
+            var stopat = c.extent1;
+            if(dual > 0) {
+                start = -1;
+                inc = -1;
+                stopat = 0-c.extent2;
             }
-            else {
-                curx = c.x;
-                cury = (c.y+i*cy.size);
-            }
-            rng = CustomRandom(curx, cury, cy.size);  
-            r = {};
-            cindex = rng.next() % cy.colors.length;
-            var abort = false;
-            if(cy.index >= 14 && cy.index <= 17) {
-                // lookup out of city colors
-                var gridPoint = getPointAlignedToGrid(curx, cury, 4194304);
-                var onCity = recallCellProperty(map, gridPoint[0], gridPoint[1], 4194304, "active");
-                if(onCity) {
-                    for(var l=14; !abort && l<18; l++) {
-                        var cellSize = indexSizeTable[l];
-                        gridPoint = getPointAlignedToGrid(curx, cury, cellSize);
-                        var onOther = recallCellProperty(map, gridPoint[0], gridPoint[1], cellSize, "active");
-                        if(onOther) {
-                            abort = true;
+            for(i=start;i!=stopat && !abort;i+=inc) {
+                colors = cy.colors;
+                var rng;
+                var curx, cury;
+                if(c.dir) {
+                    curx = (c.x+i*cy.size);
+                    cury = c.y;
+                }
+                else {
+                    curx = c.x;
+                    cury = (c.y+i*cy.size);
+                }
+                rng = CustomRandom(curx, cury, cy.size);  
+                r = {};
+                cindex = rng.next() % cy.colors.length;
+                if(cy.index >= 14 && cy.index <= 17) {
+                    // lookup out of city colors
+                    var gridPoint = getPointAlignedToGrid(curx, cury, 4194304);
+                    var onCity = recallCellProperty(map, gridPoint[0], gridPoint[1], 4194304, "active");
+                    if(onCity) {
+                        for(var l=14; !abort && l<=18; l++) {
+                            var cellSize = indexSizeTable[l];
+                            gridPoint = getPointAlignedToGrid(curx, cury, cellSize);
+                            var onOther = recallCellProperty(map, gridPoint[0], gridPoint[1], cellSize, "active");
+                            if(onOther) {
+                                abort = true;
+                                // colors = cy.outcolors;
+                            }
                         }
                     }
+                    if(cy.index == 19 || cy.index == 18) {
+                        if(onCity && cy.index == 19) {
+                            abort = true;
+                        }
+                        if(!onCity) {
+                            colors = cy.outcolors;                    
+                        }
+                        // else if(!onCity && cy == 18) {
+                        //     colors = cy.outcolors;
+                        // }
+                    }                
                 }
-                if(cy.index == 19 || cy.index == 18) {
-                    if(onCity && cy.index == 19) {
-                        abort = true;
-                    }
-                    if(!onCity) {
-                        colors = cy.outcolors;                    
-                    }
-                    // else if(!onCity && cy == 18) {
-                    //     colors = cy.outcolors;
-                    // }
-                }                
+                if(!abort) {            
+                    r.color = colors[cindex];
+                    r.rect = [(curx-x1)*scalex, (cury-y1)*scaley, cy.size*scalex, cy.size*scaley];
+                    rects.push(r);                
+                    rememberCellProperty(map, curx, cury, cy.size, "active", true);
+                }
             }
-            if(!abort) {            
-                r.color = colors[cindex];
-                r.rect = [(curx-x1)*scalex, (cury-y1)*scaley, cy.size*scalex, cy.size*scaley];
-                rects.push(r);                
-                rememberCellProperty(map, curx, cury, cy.size, "active", true);
-            }
-        }
+        }        
     }
     // console.log(c.tstart);
 }
@@ -309,8 +323,8 @@ var getRectsIn = function(x1, y1, x2, y2, s) {
                             c.size = scalex;
                             c.dir = rng.next() < 512 ? 0 : 1;
                             c.tstart = rng.next();
-                            c.extent1 = rng.next().mod(cy.stretch);
-                            c.extent2 = rng.next().mod(cy.stretch);
+                            c.extent1 = cy.minstretch + rng.next().mod(cy.stretch - cy.minstretch);
+                            c.extent2 = cy.minstretch + rng.next().mod(cy.stretch - cy.minstretch);
                             grid[stepx][stepy] = c;
                             runlist.insert(c);
                         }
@@ -372,8 +386,8 @@ tiles.drawTile = function(canvas, tile, zoom) {
 }
 
 var map = new L.Map('map', {
-    center: new L.LatLng(39.96094, -37.90723), 
-    zoom: 11, 
+    center: new L.LatLng(543.03418, 1231.83008), 
+    zoom: 10, 
     minZoom: 0,
     maxZoom: 14,
     layers: [tiles],
