@@ -82,7 +82,7 @@ var indexSizeTable = {
 var buildingGroup = [
         {index: 18, size: 131072, thresh: 80, grow: LINE, minDrawSize: 8, minstretch: 1,
             stretch: 3, zcolors:["#000000"], colors:["#5b5c94", "#f50603", "#dba300"], outcolors:["#06f503", "#13f506"]},
-        {index: 17, size: 65536, thresh: 50, grow: LINE, minDrawSize: 8, minstretch: 1,
+        {index: 17, size: 65536, thresh: 100, grow: LINE, minDrawSize: 8, minstretch: 1,
             stretch: 3, zcolors:["#000000"], colors:["#f50603", "#dba300", "#5b5c94", "#dfc4bd"], outcolors:["#06f503", "#13f506"]}
 ]
 
@@ -394,9 +394,10 @@ tiles.drawTile = function(canvas, tile, zoom) {
     // ctx.fillRect.apply(ctx, [ -40, -40, 100, 100]);
 }
 
+var initialCenter = new L.LatLng(538.3184,1229.7720);
 var map = new L.Map('map', {
-    center: new L.LatLng(542.0791, 1233.4502), 
-    // 538.25684, 1229.37695
+    // center: new L.LatLng(542.0791, 1233.4502), 
+    center: initialCenter, 
     zoom: 10, 
     minZoom: 0,
     maxZoom: 14,
@@ -407,13 +408,16 @@ var map = new L.Map('map', {
     crs: L.CRS.Simple
 });
 
-var popup = L.popup();
+var hash = new L.Hash(map);
+// qmap.center = initialCenter;
 
-function onMapClick(e) {
-    popup
-        .setLatLng(e.latlng)
-        .setContent("You clicked the map at " + e.latlng.toString())
-        .openOn(map);
-}
+// var popup = L.popup();
 
-map.on('click', onMapClick);
+// function onMapClick(e) {
+//     popup
+//         .setLatLng(e.latlng)
+//         .setContent("You clicked the map at " + e.latlng.toString())
+//         .openOn(map);
+// }
+
+// map.on('click', onMapClick);
