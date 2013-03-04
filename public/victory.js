@@ -144,23 +144,30 @@ var growSeed = function(c, x1, y1, scalex, scaley, rects, map, cy) {
             }
         }
     }
-    if(cy.grow == CROSS || (cy.grow == LINE && c.dir)) {
+    if(cy.grow == CROSS || (cy.grow == LINE)) {
         for(i=0-c.extent1;i<c.extent2;i++) {
-            var rng = CustomRandom((c.x+i*cy.size), c.y, cy.size); 
+            var rng;
+            var curx, cury;
+            if(c.dir) {
+                curx = (c.x+i*cy.size);
+                cury = c.y;
+            }
+            else {
+                curx = c.x;
+                cury = (c.y+i*cy.size);
+            }
+            rng = CustomRandom(curx, cury, cy.size);  
             r = {};
             cindex = rng.next() % cy.colors.length;
-            // cindex = rng.next() < 512 ? 0 : 1;
-            // console.log("cindex is " + cindex);
-            // c.color= cy.color;
             var abort = false;
             if(cy.index >= 14 && cy.index <= 17) {
                 // lookup out of city colors
-                var gridPoint = getPointAlignedToGrid((c.x+i*cy.size), c.y, 4194304);
+                var gridPoint = getPointAlignedToGrid(curx, cury, 4194304);
                 var onCity = recallCellProperty(map, gridPoint[0], gridPoint[1], 4194304, "active");
                 if(onCity) {
                     for(var l=14; !abort && l<18; l++) {
                         var cellSize = indexSizeTable[l];
-                        gridPoint = getPointAlignedToGrid((c.x+i*cy.size), c.y, cellSize);
+                        gridPoint = getPointAlignedToGrid(curx, cury, cellSize);
                         var onOther = recallCellProperty(map, gridPoint[0], gridPoint[1], cellSize, "active");
                         if(onOther) {
                             abort = true;
@@ -181,49 +188,9 @@ var growSeed = function(c, x1, y1, scalex, scaley, rects, map, cy) {
             }
             if(!abort) {            
                 r.color = colors[cindex];
-                r.rect = [(c.x-x1+i*cy.size)*scalex, (c.y-y1)*scaley, cy.size*scalex, cy.size*scaley];
+                r.rect = [(curx-x1)*scalex, (cury-y1)*scaley, cy.size*scalex, cy.size*scaley];
                 rects.push(r);                
-                rememberCellProperty(map, (c.x+i*cy.size), c.y, cy.size, "active", true);
-            }
-        }
-    }
-    if(cy.grow == CROSS || (cy.grow == LINE && !c.dir)) {
-        for(j=0-c.extent1;j<c.extent2;j++) {
-            var rng = CustomRandom(c.x, (c.y+j*cy.size), cy.size); 
-            r = {};
-            cindex = rng.next() % cy.colors.length;
-            // cindex = rng.next() < 512 ? 0 : 1;
-            // console.log("cindex is " + cindex);
-            // c.color= cy.color;
-            var abort = false;
-            if(cy.index >= 14 && cy.index <= 17) {
-                // lookup out of city colors
-                var gridPoint = getPointAlignedToGrid(c.x, (c.y+j*cy.size), 4194304);
-                var onCity = recallCellProperty(map, gridPoint[0], gridPoint[1], 4194304, "active");
-                if(onCity) {
-                    for(var l=14; !abort && l<18; l++) {
-                        var cellSize = indexSizeTable[l];
-                        gridPoint = getPointAlignedToGrid(c.x, (c.y+j*cy.size), cellSize);
-                        var onOther = recallCellProperty(map, gridPoint[0], gridPoint[1], cellSize, "active");
-                        if(onOther) {
-                            abort = true;
-                        }
-                    }
-                }
-                if(cy.index == 19 || cy.index == 18) {
-                    if(onCity && cy.index == 19) {
-                        abort = true;
-                    }
-                    if(!onCity) {
-                        colors = cy.outcolors;                    
-                    }
-                }
-            }
-            if(!abort) {            
-                r.color = colors[cindex];
-                r.rect = [(c.x-x1)*scalex, (c.y-y1+j*cy.size)*scaley, cy.size*scalex, cy.size*scaley];
-                rects.push(r);                
-                rememberCellProperty(map, c.x, (c.y+j*cy.size), cy.size, "active", true);
+                rememberCellProperty(map, curx, cury, cy.size, "active", true);
             }
         }
     }
