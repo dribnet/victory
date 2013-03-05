@@ -22,16 +22,17 @@ the algorithm with the explanation and context to understand it.
 CustomRandom
 ------------
 To obtain the overall effect of predetermined variation, I needed to implement my own
-custom random number generator. This generator needed to be full repeatable and take
-three arguments which represent the position and depth as the seed. My implementation
+custom random number generator. This generator needs to be fully repeatable and takes
+three arguments which represent the position and depth as the seed. This implementation
 is based on
 [Michal Budzynski's JavaScript implementation](# adapted from http://michalbe.blogspot.com/2011/02/javascript-random-numbers-with-custom.html)
 and forgoes better statistics for speed and initializaiton time because this program
-has the somewhat unusual charastic of needing thousands of individual random number
+has the somewhat unusual characteristic of needing thousands of individual random number
 generators as the design unfolds.
 
 By using individual random number generators spatially connected to their environment,
-locations are independent of each other given some radius of interaction.
+locations are independent of each other given some radius of interaction, which allows
+the image tiles to be generated any order.
 
     # these numbers are used again and again, so we cache them for efficiency
     cachedRandomConstant = Math.pow(2, 13)+1
@@ -65,7 +66,7 @@ locations are independent of each other given some radius of interaction.
             next : nextfn
         }  
 
-This mod funciton makes JavaScript behave better with negative numbers. More information
+This additional mod funciton provides correct results with negative numbers. More information
 is available [on StackOverflow](http://stackoverflow.com/questions/4467539/javascript-modulo-not-behaving)
 and [about.com](http://javascript.about.com/od/problemsolving/a/modulobug.htm)
 
@@ -83,7 +84,7 @@ Utilities for reading/writing values in a lookup table. A key,value is written i
 object at a specific point and depth on the grid. This is used for collision detection across
 layers, etc.
 
-    rememberCellProperty = (map, x, y, s, k, v) ->
+    zrememberCellProperty = (map, x, y, s, k, v) ->
         if (!map[s])
           map[s] = {}
         if (!map[s][x])
@@ -101,7 +102,7 @@ layers, etc.
           return undefined
         return map[s][x][y][k]
 
-    zrememberCellProperty = (map, x, y, s, k, v) ->
+    rememberCellProperty = (map, x, y, s, k, v) ->
         map[s] = {} if not map[s]?
         map[s][x] = {} if not map[s][x]?
         map[s][x][y] = {} if not map[s][x][y]?
@@ -134,7 +135,16 @@ spring into being after the group before them has completed. In this way large
 features can be laid down followed by smaller ones, though sometimes the layers
 can interact as they are growing.
 
-Most of the overall design is encoded in these magic constants.
+Most of the overall design is encoded in these magic constants. First, some handy colors.
+
+    mYellow = "#f7bf00"
+    dullYellow = "#dba300"
+    mBlue = "#37508a"
+    dullBlue = "#5b5c94"
+    mRed = "#f50603"
+    dullGrey = "#dfc4bd"
+    mGrey = "#ded5d3"
+    mBackground = "#fcfffc"
 
 Elements are grown from seeds. Each seed can grow as one of the following primitives.
 
@@ -151,30 +161,32 @@ The building group represents "large buildings" in the city.
 
     buildingGroup = [
       {index: 18, size: 131072, thresh: 80, grow: LINE, minDrawSize: 8, minstretch: 1,
-      stretch: 3, zcolors:["#000000"], colors:["#5b5c94", "#f50603", "#dba300"], outcolors:["#06f503", "#13f506"]},
+      stretch: 3, zcolors:[mGrey], colors:[mBlue, mRed, mYellow], 
+      outcolors:["#06f503", "#13f506"]},
       {index: 17, size: 65536, thresh: 100, grow: LINE, minDrawSize: 8, minstretch: 1,
-      stretch: 3, zcolors:["#000000"], colors:["#f50603", "#dba300", "#5b5c94", "#dfc4bd"], outcolors:["#06f503", "#13f506"]}
+      stretch: 3, zcolors:[mGrey], colors:[mRed, mYellow, mBlue, mGrey], outcolors:["#06f503", "#13f506"]}
     ]
 
 All the other details of the cities are in the city group.
 
     cityGroup = [
         {index: 17, size: 65536, thresh: 100, grow: LINE, minDrawSize: 8, minstretch: 1,
-        stretch: 2, colors:["#f50603", "#dba300", "#5b5c94", "#dfc4bd"]},
+        stretch: 2, colors:[mRed, mYellow, mBlue, mGrey]},
         {index: 16, size: 32768, thresh: 100, grow: LINE, minDrawSize: 8, minstretch: 1,
-        stretch: 3, colors:["#f50603", "#dba300", "#5b5c94", "#dfc4bd"]},
+        stretch: 3, colors:[mRed, mYellow, mBlue, mGrey]},
         {index: 15, size: 16384, thresh: 7, grow: LINE, minDrawSize: 8, minstretch: 6,
-        stretch: 7, colors:["#f50603", "#dba300", "#5b5c94"], outcolors:['#FFFF00']},
+        stretch: 7, colors:[mRed, mYellow, mBlue], outcolors:['#FFFF00']},
         # red, yellow, black, blue, grey
         {index: 14, size: 8192, thresh: 9, grow: LINE,  minDrawSize: 8, minstretch: 22,
-        stretch: 24, colors:["#f50603", "#dba300", "#291f20", "#5b5c94", "#dfc4bd"], outcolors:['#FFFF00']}
+        stretch: 24, colors:[mRed, mYellow, "#291f20", mBlue, mGrey], outcolors:['#FFFF00']}
     ]
 
 Drawn separately are the finest details, which can only exist in open spaces.
 
     peopleGroup = [
-        {index: 11, size: 1024, thresh: 2, grow: LINE,  minDrawSize: 4, minstretch: 1,
-        stretch: 2, colors:["#F0E68C", "#EEDC82", "#8B6508", "#EECFA1"]}
+        {index: 11, size: 1024, thresh: 1, grow: CLOUD,  minDrawSize: 4, minstretch: 1,
+        cloudThresh: 40,
+        stretch: 9, colors:["#d8ad00", "#a68500", "#735c00", "#403300"]}
     ]
 
 The outer group defines the largest features which are seen when zooming out.
@@ -191,9 +203,9 @@ The outer group defines the largest features which are seen when zooming out.
         {index: 22, size: 2097152, thresh: 8, grow: POOL, minDrawSize: 8, minstretch: 1,
         stretch: 5, colors:["#dfc4bd", "#c4dfbd"]},
         {index: 23, size: 4194304, thresh: 1, grow: POOL,  minDrawSize: 4, minstretch: 1,
-        stretch: 2, colors:["#fcfffc"]},
+        stretch: 2, colors:[mBackground]},
         {index: 19, size: 262144, thresh: 5, grow: CROSS, minDrawSize: 8, minstretch: 1,
-        stretch: 5, colors:["#f50603"], outcolors:["#46f543", "#63f546"]}
+        stretch: 5, colors:[mRed], outcolors:["#46f543", "#63f546"]}
     ]
 
 This is the master list of groups and encodes the order in which they are generated.
@@ -207,8 +219,8 @@ This is the master list of groups and encodes the order in which they are genera
 
 Each layer generates a number of seeds on a timeline, and then grows the feature from the
 seed by running the timeline in order. This is the function that grows an individual
-seed into a feature. The result is a set of rect objects pushed onto the provided
-rects paramater.
+seed into a feature. The result is a set of rectangle objects pushed onto the provided
+rects array.
 
     growSeed = (c, x1, y1, scalex, scaley, rects, map, cy) ->
         colors = cy.colors
@@ -224,7 +236,38 @@ rects paramater.
                     rects.push(r)
                     rememberCellProperty(map, (c.x+i*cy.size), (c.y+j*cy.size), cy.size, "active", true)
         if (cy.grow == CLOUD)
-            rng = CustomRandom(curx, cury, cy.size)
+            main_rng = CustomRandom(c.x, c.y, cy.size)
+            cindex = main_rng.next() % cy.colors.length
+            poolColor = colors[cindex]
+            for i in [0-c.extent1 ... c.extent2]
+                curx = (c.x+i*cy.size)
+                for j in [0-c.extent1 ... c.extent2]
+                    cury = (c.y+i*cy.size)
+                    abort = false;
+                    rng = CustomRandom(curx, cury, cy.size)
+                    # abort randomly to get that cloud effect
+                    n = main_rng.next()
+                    if (n > cy.cloudThresh)
+                        abort = true
+                    if (!abort && cy.index >= 11 && cy.index <= 19)
+                        # lookup out of city colors
+                        gridPoint = getPointAlignedToGrid(curx, cury, 4194304)
+                        onCity = recallCellProperty(map, gridPoint[0], gridPoint[1], 4194304, "active")
+                        if (onCity)
+                            for l in [12 .. 18]
+                                break if abort
+                                cellSize = indexSizeTable[l]
+                                gridPoint = getPointAlignedToGrid(curx, cury, cellSize)
+                                onOther = recallCellProperty(map, gridPoint[0], gridPoint[1], cellSize, "active")
+                                if (onOther)
+                                    abort = true
+                    if (!abort)
+                        r = {}
+                        cindex = rng.next() % cy.colors.length
+                        r.color = cy.colors[cindex]
+                        r.rect = [(c.x-x1+i*cy.size)*scalex, (c.y-y1+j*cy.size)*scaley, cy.size*scalex, cy.size*scaley]
+                        rects.push(r)
+                        rememberCellProperty(map, (c.x+i*cy.size), (c.y+j*cy.size), cy.size, "active", true)
         if(cy.grow == CROSS || (cy.grow == LINE))
             for dual in [0 ... 2]
                 abort = false
@@ -277,7 +320,7 @@ rects paramater.
 
 This is the core routine of the algorithm. Given a bounding box and level of zoom, it returns
 all of the rectangles that are in that bounding box. To do that it must run a full simulation
-of the layers and seeds from a radius of causality around the box.
+of the seeds of all layers from a radius of causality around the provided box.
 
 This method is called as needed by the interface as someone moves through the virtual space.
 It returns an array of rectangles to be drawn.
@@ -315,7 +358,7 @@ It returns an array of rectangles to be drawn.
             for cy in lg
                 # short circuit out if features are too small
                 if(cy.size * scalex < cy.minDrawSize)
-                    break # skip this loop
+                    continue 
 
                 maxstretch = cy.stretch
 
@@ -400,7 +443,7 @@ It returns an array of rectangles to be drawn.
     
 Map
 ---
-The interface presented is a navigable map. The heavy lifing for this is done by
+The interface presented is a navigable map. The map interface itself is provided by
 the [excellent leaflet javascript library](leafletjs.com). This use of leaflet is
 slightly unusual in that the map itself is dynamically generated as a result
 of the navigation itself. To acheive this, a special subclass of leaflet's
@@ -444,9 +487,9 @@ the set of rects on an HTML canvas.
         # ctx.fillRect.apply(ctx, [ -40, -40, 100, 100])
 
 Finally, we provide settings for the map and start it working.
-I use the mlevans excellent [leaflet-hash](https://github.com/mlevans/leaflet-hash)
-plugin to provide links to specific views, though I have to do some
-custom initializaiton to make sure the map starts in the right place.
+I use mlevans' useful [leaflet-hash](https://github.com/mlevans/leaflet-hash)
+plugin to allow links to specific views, though I have to do some
+custom initializaiton to make sure the map is created in the right place.
 
     defaultStart =
         center: new L.LatLng 584.8926, 1106.5347
