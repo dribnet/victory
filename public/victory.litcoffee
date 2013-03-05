@@ -84,35 +84,17 @@ Utilities for reading/writing values in a lookup table. A key,value is written i
 object at a specific point and depth on the grid. This is used for collision detection across
 layers, etc.
 
-    zrememberCellProperty = (map, x, y, s, k, v) ->
-        if (!map[s])
-          map[s] = {}
-        if (!map[s][x])
-          map[s][x] = {}
-        if (!map[s][x][y])
-          map[s][x][y] = {}
-        map[s][x][y][k] = v
-
-    recallCellProperty = (map, x, y, s, k) ->
-        if (!map[s])
-          return undefined
-        if (!map[s][x])
-          return undefined
-        if (!map[s][x][y])
-          return undefined
-        return map[s][x][y][k]
-
     rememberCellProperty = (map, x, y, s, k, v) ->
         map[s] = {} if not map[s]?
         map[s][x] = {} if not map[s][x]?
         map[s][x][y] = {} if not map[s][x][y]?
         map[s][x][y][k] = v
 
-    zrecallCellProperty = (map, x, y, s, k) ->
-        if not map[s]? undefined
-        else if not map[s][x]? undefined
-        else if not map[s][x][y]? undefined
-        else map[s][x][y][k]
+    recallCellProperty = (map, x, y, s, k) ->
+        if map[s]? && map[s][x]? && map[s][x][y]?
+          map[s][x][y][k]
+        else
+          undefined
 
 Layers
 ------
@@ -145,6 +127,14 @@ Most of the overall design is encoded in these magic constants. First, some hand
     dullGrey = "#dfc4bd"
     mGrey = "#ded5d3"
     mBackground = "#fcfffc"
+    forestGreen = "#0b9600"
+    darkForestGreen = "#006a02"
+    darkBlueGreen = "#006a50"
+    darkerBlueGreen = "#004d39"
+    veryDarkYellow = "#243300"
+    forestWoods = "#964e00"
+    sageStreak = "#00ce91"
+    darkBackground = "#0a4d00"
 
 Elements are grown from seeds. Each seed can grow as one of the following primitives.
 
@@ -160,11 +150,11 @@ for convenience.
 The building group represents "large buildings" in the city.
 
     buildingGroup = [
-      {index: 18, size: 131072, thresh: 80, grow: LINE, minDrawSize: 8, minstretch: 1,
+      {index: 18, size: 131072, thresh: 25, grow: LINE, minDrawSize: 4, minstretch: 1,
       stretch: 3, zcolors:[mGrey], colors:[mBlue, mRed, mYellow], 
-      outcolors:["#06f503", "#13f506"]},
+      outcolors:[forestWoods, forestGreen]},
       {index: 17, size: 65536, thresh: 100, grow: LINE, minDrawSize: 8, minstretch: 1,
-      stretch: 3, zcolors:[mGrey], colors:[mRed, mYellow, mBlue, mGrey], outcolors:["#06f503", "#13f506"]}
+      stretch: 3, zcolors:[mGrey], colors:[mRed, mYellow, mBlue, mGrey], outcolors:["#000000", "#000000"]}
     ]
 
 All the other details of the cities are in the city group.
@@ -196,16 +186,16 @@ The outer group defines the largest features which are seen when zooming out.
         stretch: 4, colors:["#7777ee"]},
         {index: 27, size: 67108864, thresh: 30, grow: LINE, minDrawSize: 8, minstretch: 1,
         stretch: 2, colors:["#8888ee"]},
-        {index: 25, size: 16777216, thresh: 8, grow: POOL, minDrawSize: 8, minstretch: 1,
-        stretch: 4, colors:["#dfc4bd", "#c4dfbd"]},
-        {index: 24, size: 8388608, thresh: 8, grow: POOL, minDrawSize: 8, minstretch: 1,
-        stretch: 4, colors:["#dfc4bd", "#c4dfbd"]},
-        {index: 22, size: 2097152, thresh: 8, grow: POOL, minDrawSize: 8, minstretch: 1,
-        stretch: 5, colors:["#dfc4bd", "#c4dfbd"]},
+        {index: 25, size: 16777216, thresh: 20, grow: POOL, minDrawSize: 8, minstretch: 2,
+        stretch: 6, colors:[darkBlueGreen, veryDarkYellow, darkerBlueGreen]},
+        {index: 24, size: 8388608, thresh: 16, grow: POOL, minDrawSize: 8, minstretch: 1,
+        stretch: 4, colors:[darkForestGreen, darkBlueGreen]},
+        {index: 22, size: 2097152, thresh: 8, grow: POOL, minDrawSize: 4, minstretch: 1,
+        stretch: 5, colors:[forestGreen, darkForestGreen]},
         {index: 23, size: 4194304, thresh: 1, grow: POOL,  minDrawSize: 4, minstretch: 1,
         stretch: 2, colors:[mBackground]},
-        {index: 19, size: 262144, thresh: 5, grow: CROSS, minDrawSize: 8, minstretch: 1,
-        stretch: 5, colors:[mRed], outcolors:["#46f543", "#63f546"]}
+        {index: 19, size: 262144, thresh: 5, grow: CROSS, minDrawSize: 4, minstretch: 1,
+        stretch: 5, colors:[mRed], outcolors:[sageStreak]}
     ]
 
 This is the master list of groups and encodes the order in which they are generated.
@@ -269,6 +259,10 @@ rects array.
                         rects.push(r)
                         rememberCellProperty(map, (c.x+i*cy.size), (c.y+j*cy.size), cy.size, "active", true)
         if(cy.grow == CROSS || (cy.grow == LINE))
+          for isVertical in [true, false]
+            # line skips one part of the cross
+            if (cy.grow == LINE && isVertical != c.dir)
+              continue
             for dual in [0 ... 2]
                 abort = false
                 start = 0
@@ -283,7 +277,7 @@ rects array.
                     rng
                     curx
                     cury
-                    if (c.dir)
+                    if (isVertical)
                         curx = (c.x+i*cy.size)
                         cury = c.y
                     else
@@ -458,7 +452,7 @@ the set of rects on an HTML canvas.
         ctx = canvas.getContext '2d'
 
         # ctx.fillStyle = '#fefef2'
-        ctx.fillStyle = '#eeeee2'
+        ctx.fillStyle = darkBackground
         ctx.fillRect(0, 0, 256, 256)
 
         ctx.fillStyle = 'black'
