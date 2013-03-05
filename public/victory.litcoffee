@@ -179,13 +179,17 @@ Drawn separately are the finest details, which can only exist in open spaces.
         stretch: 9, colors:["#d8ad00", "#a68500", "#735c00", "#403300"]}
     ]
 
-The outer group defines the largest features which are seen when zooming out.
+The outer group defines the largest features which are seen when zooming out. waterGroup
+is the furtherst out so that it is established on its own timeline.
+
+    waterGroup = [
+        {index: 28, size: 134217728, thresh: 30, grow: POOL, minDrawSize: 8, minstretch: 1,
+        stretch: 4, colors:["#7777ee"]},
+        {index: 27, size: 67108864, thresh: 30, grow: POOL, minDrawSize: 8, minstretch: 1,
+        stretch: 2, colors:["#8888ee"]}
+    ]
 
     outerGroup = [
-        {index: 28, size: 134217728, thresh: 30, grow: LINE, minDrawSize: 8, minstretch: 1,
-        stretch: 4, colors:["#7777ee"]},
-        {index: 27, size: 67108864, thresh: 30, grow: LINE, minDrawSize: 8, minstretch: 1,
-        stretch: 2, colors:["#8888ee"]},
         {index: 25, size: 16777216, thresh: 20, grow: POOL, minDrawSize: 8, minstretch: 2,
         stretch: 6, colors:[darkBlueGreen, veryDarkYellow, darkerBlueGreen]},
         {index: 24, size: 8388608, thresh: 16, grow: POOL, minDrawSize: 8, minstretch: 1,
@@ -201,6 +205,7 @@ The outer group defines the largest features which are seen when zooming out.
 This is the master list of groups and encodes the order in which they are generated.
 
     layerGroups = [
+        waterGroup,
         outerGroup,
         buildingGroup,
         cityGroup,
