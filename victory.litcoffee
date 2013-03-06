@@ -508,6 +508,11 @@ the set of rects on an HTML canvas.
     tiles = new L.TileLayer.Canvas {continuousWorld: true}
 
     tiles.drawTile = (canvas, tile, zoom) ->
+      analytics.track('DrawTile', {
+        x: tile.x
+        y: tile.y
+        zoom: zoom
+      });
       ctx = canvas.getContext '2d'
       ctx.fillStyle = darkBackground
       ctx.fillRect(0, 0, 256, 256)
@@ -549,6 +554,7 @@ custom initializaiton to make sure the map is created in the right place.
     }
     hash = new L.Hash map
 
+    analytics.track('Running', {});
 
 And lastly, some external controls for navigation.
 
@@ -594,11 +600,15 @@ And lastly, some external controls for navigation.
     ]
 
     this.clickHome = () ->
+      analytics.track('ClickHome', {});
       curLinkIndex = 0;
       location.hash = linkPath[0]
       hash.update()
 
     this.clickDemo = () ->
+      analytics.track('ClickTour', {
+        index: curLinkIndex
+      });
       curLinkIndex = (curLinkIndex + 1) % linkPath.length;
       location.hash = linkPath[curLinkIndex]
       console.log("at " + curLinkIndex + " of " + linkPath.length);
