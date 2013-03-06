@@ -1,14 +1,1 @@
-/target
-/lib
-/classes
-/checkouts
 /public/victory.js
-/public/out
-/stash
-pom.xml
-*.jar
-*.class
-.lein-deps-sum
-.lein-failures
-.lein-plugins
-.lein-cljsbuild-compiler*
