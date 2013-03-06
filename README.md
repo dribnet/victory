@@ -1,13 +1,12 @@
 Victory
 =======
 
-Victory is a design landscape inspired by Mondrian, specifically victory boogie-woogie.
+Victory is a design landscape inspired by Mondrian, specifically [Victory Boogie-Woogie](http://en.wikipedia.org/wiki/Victory_Boogie-Woogie).
 
 Design landscapes are expansive drawing surfaces. In this case, the surface is actually
 infinite in two dimensions with several layers of depth throughout. Mondrain was influenced
 by the cityscape around him, and here these themes play out as a navigable map that
-stretches in all directions. Some of the familiar themes and colors are present, along
-with many new variations.
+stretches in all directions.
 
 This work presented many technical challenges. Algorithmically, the visuals are the
 result of a dynamic process which is a hand-crafted hybrid of fractal and
@@ -68,9 +67,9 @@ CustomRandom = (x,y,s) ->
       next : nextfn
   }  
 ```
-This additional mod funciton provides correct results with negative numbers. More information
+This additional mod funciton provides correct results with negative numbers. (more information
 is available [on StackOverflow](http://stackoverflow.com/questions/4467539/javascript-modulo-not-behaving)
-and [about.com](http://javascript.about.com/od/problemsolving/a/modulobug.htm)
+and [about.com](http://javascript.about.com/od/problemsolving/a/modulobug.htm))
 ```coffeescript
 Number.prototype.mod = (n) ->
   ((this%n)+n)%n
@@ -123,23 +122,23 @@ Most of the overall design is encoded in these magic constants.
 
 Color definitions.
 ```coffeescript
-mYellow = "#f7bf00"
-dullYellow = "#dba300"
-mBlue = "#37508a"
-dullBlue = "#5b5c94"
-mRed = "#f50603"
-dullGrey = "#dfc4bd"
-mGrey = "#ded5d3"
-mBlack = "#291f20"
-mBackground = "#fcfffc"
-forestGreen = "#0b9600"
-darkForestGreen = "#006a02"
-darkBlueGreen = "#006a50"
-darkerBlueGreen = "#004d39"
-veryDarkYellow = "#243300"
-forestWoods = "#964e00"
-sageStreak = "#00ce91"
-darkBackground = "#0a4d00"
+mYellow = '#f7bf00'
+dullYellow = '#dba300'
+mBlue = '#37508a'
+dullBlue = '#5b5c94'
+mRed = '#f50603'
+dullGrey = '#dfc4bd'
+mGrey = '#ded5d3'
+mBlack = '#291f20'
+mBackground = '#fcfffc'
+forestGreen = '#0b9600'
+darkForestGreen = '#006a02'
+darkBlueGreen = '#006a50'
+darkerBlueGreen = '#004d39'
+veryDarkYellow = '#243300'
+forestWoods = '#964e00'
+sageStreak = '#00ce91'
+darkBackground = '#0a4d00'
 ```
 Elements are grown from seeds. Each seed can grow as one of the following primitives.
 ```coffeescript
@@ -163,7 +162,7 @@ buildingGroup = [
   {index: 17, size: 65536, thresh: 100, grow: LINE,
   minDrawSize: 8, minstretch: 1, stretch: 3, 
   colors: [mRed, mYellow, mBlue, mGrey],
-  outcolors:["#000000"]}
+  outcolors:['#000000']}
 ]
 ```
 All the other details of the cities are in the city group.
@@ -194,7 +193,7 @@ Drawn separately are the finest details, which can only exist in open spaces.
 peopleGroup = [
   {index: 11, size: 1024, thresh: 1, grow: CLOUD,
   minDrawSize: 4, minstretch: 1, cloudThresh: 40, stretch: 9,
-  colors:["#d8ad00", "#a68500", "#735c00", "#403300"]}
+  colors:['#d8ad00', '#a68500', '#735c00', '#403300']}
 ]
 ```
 The outer group defines the largest features which are seen when zooming out. waterGroup
@@ -202,10 +201,10 @@ is the furtherst out so that it is established on its own timeline.
 ```coffeescript
 waterGroup = [
   {index: 28, size: 134217728, thresh: 30, grow: POOL,
-  minDrawSize: 8, minstretch: 1, stretch: 4, colors:["#7777ee"]},
+  minDrawSize: 8, minstretch: 1, stretch: 4, colors:['#7777ee']},
 
   {index: 27, size: 67108864, thresh: 30, grow: POOL,
-  minDrawSize: 8, minstretch: 1, stretch: 2, colors:["#8888ee"]}
+  minDrawSize: 8, minstretch: 1, stretch: 2, colors:['#8888ee']}
 ]
 
 outerGroup = [
@@ -494,7 +493,7 @@ run each in order.
 And finally we return the aggregated list of rects to draw.
 ```coffeescript
   return rects
-
+```
 Map
 ---
 The interface presented is a navigable map. The map interface itself is provided by
@@ -505,7 +504,7 @@ TileLayer class is created. This verison of the class has a custom version of
 the leaflet ```drawTile``` method which tranlates coordinate spaces, delegates
 all the hard work to the ```getRectsIn``` function above, and then renders
 the set of rects on an HTML canvas.
-
+```coffeescript
 tiles = new L.TileLayer.Canvas {continuousWorld: true}
 
 tiles.drawTile = (canvas, tile, zoom) ->
