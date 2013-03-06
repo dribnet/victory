@@ -508,68 +508,66 @@ custom initializaiton to make sure the map is created in the right place.
         crs: L.CRS.Simple
     }
     hash = new L.Hash map
-    attrib = new L.Control.Attribution
-    attrib.setPrefix ""
-    attrStr = '<a href="#" onclick="javascript:clickHome();">home</a> | '
-    attrStr += '<a href="#" onclick="javascript:clickDemo();">demo</a> | '
-    attrStr += '<a href="https://github.com/dribnet/victory/">code</a>'
-    attrib.addAttribution attrStr
-    map.addControl attrib
 
 
 And lastly, some external controls for navigation.
 
-    travellingHome = false
-    runningDemo = false
+    attrib = new L.Control.Attribution
+    attrib.setPrefix ""
+    attrStr = '<a href="#" onclick="javascript:clickDemo();">tour</a> | '
+    attrStr += '<a href="#" onclick="javascript:clickHome();">home</a> | '
+    attrStr += '<a href="https://github.com/dribnet/victory/">code</a>'
+    attrib.addAttribution attrStr
+    map.addControl attrib
 
-    continueToPointZoomingIn = (zoom) ->
-
-    # speed is seconds per screen (roughly)
-    travelToPoint = (latlng, speed, callback) ->
-      offset = map._getNewTopLeftPoint(defaultStart.center).subtract(map._getTopLeftPoint())
-      size = map.getSize()
-      relativeManDist = (Math.abs(offset.x) + Math.abs(offset.y)) / (size.x + size.y);
-      timeToPan = speed * relativeManDist;
-      if (timeToPan < 0.25) then timeToPan = 0.25;
-      console.log("Screens away: " + relativeManDist + " so " + timeToPan)
-      map.on({
-        moveend: ->
-          map.off("moveend", this.moveend);
-          callback() if callback?
-      })
-      map.panBy(offset, timeToPan, false, true)
-
-    zoomToward = (zoom) ->
-      if (map.getZoom() < zoom)
-        map.zoomIn()
-      else if (map.getZoom() > zoom)
-        map.zoomOut()
+    curLinkIndex = 1;
+    linkPath = [
+      "#10/584.8931/1106.5347",  # home
+      "#9/584.885/1106.920",
+      "#7/584.398/1107.727",
+      "#4/581.66/1111.84",
+      "#0/572.1/1127.6",
+      "#0/448/1374",
+      "#2/398.4/1492.8",
+      "#4/376.78/1544.72",
+      "#6/369.914/1552.977",
+      "#8/369.908/1552.982",
+      "#10/370.0034/1552.8345",
+      "#12/370.0756/1552.8522",
+      "#9/370.0752/1552.8545",
+      "#5/370.078/1552.859",
+      "#1/370/1553",
+      "#1/186/1521",
+      "#3/156.6/1558.0",
+      "#5/148.141/1580.500",
+      "#7/148.129/1580.500",
+      "#10/147.8325/1580.6621",
+      "#10/147.5903/1580.8340",
+      "#10/147.0483/1581.2158",
+      "#10/146.8130/1581.2773",
+      "#7/147.145/1580.320",
+      "#4/148.66/1575.88",
+      "#1/167/1536",
+      "#0/403/1158",
+      "#2/584.8931/1106.5347"
+      "#7/584.8931/1106.5347"
+    ]
 
     this.clickHome = () ->
-        map.setView(defaultStart.center, defaultStart.zoom)      
+        curLinkIndex = 0;
+        location.hash = linkPath[0]
+        hash.update()
 
     this.clickDemo = () ->
-        panfn = ->
-          travelToPoint defaultStart.center, 20.0, ->
-              console.log("You did it")
-              map.on({
-                zoomend: ->
-                  if(map.getZoom() == defaultStart.zoom)
-                    map.off('zoomend', this.zoomend)
-                    window.setTimeout panfn, 2000
-                  else
-                    window.setTimeout zoomToward, 5000, defaultStart.zoom
-              });
-              zoomToward(defaultStart.zoom)
-        if(map.getZoom() == 4)
-          panfn()
-        else
-          map.on({
-            zoomend: ->
-              if(map.getZoom() == 4)
-                map.off('zoomend', this.zoomend)
-                window.setTimeout panfn, 2000
-              else
-                window.setTimeout zoomToward, 5000, 4
-          });
-          zoomToward(4)
+        curLinkIndex = (curLinkIndex + 1) % linkPath.length;
+        location.hash = linkPath[curLinkIndex]
+        console.log("at " + curLinkIndex + " of " + linkPath.length);
+        hash.update()
+
+
+    this.debugBack = () ->
+        curLinkIndex = (curLinkIndex + linkPath.length - 1) % linkPath.length;
+        location.hash = linkPath[curLinkIndex]
+        console.log("at " + curLinkIndex + " of " + linkPath.length);
+        hash.update()
+
