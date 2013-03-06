@@ -3,8 +3,10 @@ Victory
 
 Victory is a design landscape inspired by Mondrian, specifically [Victory Boogie-Woogie](http://en.wikipedia.org/wiki/Victory_Boogie-Woogie).
 
-Design landscapes are expansive drawing surfaces. In this case, the surface is actually
-infinite in two dimensions with several layers of depth throughout. Mondrain was influenced
+![ScreenShot](https://raw.github.com/dribnet/victory/master/victory1024.png)
+
+Design landscapes are expansive drawing surfaces. In this case, the surface stretches
+infinitely in two dimensions with several layers of depth throughout. Mondrain was influenced
 by the cityscape around him, and here these themes play out as a navigable map that
 stretches in all directions.
 
@@ -13,10 +15,10 @@ result of a dynamic process which is a hand-crafted hybrid of fractal and
 simulation. All graphics are generated dynamically, none of the visuals are pre-computed.
 The world literally springs to life as you zoom or pan to look at it.
 
-The document you are reading is both the description of the algorithm as well as the
-full algoithm itself. The programming language I have used is literate coffeescript,
+The document you are reading is both the description of the program as well as the
+full algorithm itself. The programming language I have used is [literate coffeescript](http://coffeescript.org/#literate),
 which was chosen because it allows me to naturally interleave the machinery of
-the algorithm with the explanation and context to understand it.
+the algorithm with explanation and context.
 
 CustomRandom
 ------------
@@ -25,7 +27,7 @@ custom random number generator. This generator needs to be fully repeatable and 
 three arguments which represent the position and depth as the seed. This implementation
 is based on
 [Michal Budzynski's JavaScript implementation](http://michalbe.blogspot.com/2011/02/javascript-random-numbers-with-custom.html)
-and forgoes better statistics for speed and initializaiton time because this program
+and forgoes better statistics for speed and initialization time because this program
 has the somewhat unusual characteristic of needing thousands of individual random number
 generators as the design unfolds.
 
@@ -67,7 +69,7 @@ when called, returns an object whose next method can be used to generate the ran
           next : nextfn
       }  
 
-This additional mod funciton provides correct results with negative numbers. (more information
+This additional mod function provides correct results with negative numbers. (more information
 is available [on StackOverflow](http://stackoverflow.com/questions/4467539/javascript-modulo-not-behaving)
 and [about.com](http://javascript.about.com/od/problemsolving/a/modulobug.htm))
 
@@ -148,7 +150,7 @@ Elements are grown from seeds. Each seed can grow as one of the following primit
     CLOUD  = 4
 
 The layers are defined inline with the groups that contain them. Not all fields are
-necessary for all layers, and sometimes debug or other informaiton is added to a layer
+necessary for all layers, and sometimes debug or other information is added to a layer
 for convenience.
 
 The building group represents "large buildings" in the city.
@@ -499,8 +501,8 @@ Map
 The interface presented is a navigable map. The map interface itself is provided by
 the [excellent leaflet javascript library](leafletjs.com). This use of leaflet is
 slightly unusual in that the map itself is dynamically generated as a result
-of the navigation itself. To acheive this, a special subclass of leaflet's
-TileLayer class is created. This verison of the class has a custom version of
+of the navigation itself. To achieve this, a special subclass of leaflet's
+TileLayer class is created. This version of the class has a custom version of
 the leaflet ```drawTile``` method which tranlates coordinate spaces, delegates
 all the hard work to the ```getRectsIn``` function above, and then renders
 the set of rects on an HTML canvas.
@@ -536,7 +538,7 @@ the set of rects on an HTML canvas.
 Provide settings for the map and start it working.
 I use mlevans' useful [leaflet-hash](https://github.com/mlevans/leaflet-hash)
 plugin to allow links to specific views, though I have to do some
-custom initializaiton to make sure the map is created in the right place.
+custom initialization to make sure the map is created in the right place.
 
     defaultStart =
       center: new L.LatLng 584.8926, 1106.5347
@@ -553,7 +555,6 @@ custom initializaiton to make sure the map is created in the right place.
       crs: L.CRS.Simple
     }
     hash = new L.Hash map
-
     analytics.track('Running', {});
 
 And lastly, some external controls for navigation.
