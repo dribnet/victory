@@ -25,7 +25,7 @@ To obtain the overall effect of predetermined variation, I needed to implement m
 custom random number generator. This generator needs to be fully repeatable and takes
 three arguments which represent the position and depth as the seed. This implementation
 is based on
-[Michal Budzynski's JavaScript implementation](# adapted from http://michalbe.blogspot.com/2011/02/javascript-random-numbers-with-custom.html)
+[Michal Budzynski's JavaScript implementation](http://michalbe.blogspot.com/2011/02/javascript-random-numbers-with-custom.html)
 and forgoes better statistics for speed and initializaiton time because this program
 has the somewhat unusual characteristic of needing thousands of individual random number
 generators as the design unfolds.
@@ -117,7 +117,9 @@ spring into being after the group before them has completed. In this way large
 features can be laid down followed by smaller ones, though sometimes the layers
 can interact as they are growing.
 
-Most of the overall design is encoded in these magic constants. First, some handy colors.
+Most of the overall design is encoded in these magic constants.
+
+Color definitions.
 
     mYellow = "#f7bf00"
     dullYellow = "#dba300"
@@ -126,6 +128,7 @@ Most of the overall design is encoded in these magic constants. First, some hand
     mRed = "#f50603"
     dullGrey = "#dfc4bd"
     mGrey = "#ded5d3"
+    mBlack = "#291f20"
     mBackground = "#fcfffc"
     forestGreen = "#0b9600"
     darkForestGreen = "#006a02"
@@ -154,7 +157,7 @@ The building group represents "large buildings" in the city.
       stretch: 3, zcolors:[mGrey], colors:[mBlue, mRed, mYellow], 
       outcolors:[forestWoods, forestGreen]},
       {index: 17, size: 65536, thresh: 100, grow: LINE, minDrawSize: 8, minstretch: 1,
-      stretch: 3, zcolors:[mGrey], colors:[mRed, mYellow, mBlue, mGrey], outcolors:["#000000", "#000000"]}
+      stretch: 3, zcolors:[mGrey], colors:[mRed, mYellow, mBlue, mGrey], outcolors:["#000000"]}
     ]
 
 All the other details of the cities are in the city group.
@@ -168,10 +171,11 @@ All the other details of the cities are in the city group.
         stretch: 7, colors:[mRed, mYellow, mBlue], outcolors:['#FFFF00']},
         # red, yellow, black, blue, grey
         {index: 14, size: 8192, thresh: 9, grow: LINE,  minDrawSize: 8, minstretch: 22,
-        stretch: 24, colors:[mRed, mYellow, "#291f20", mBlue, mGrey], outcolors:['#FFFF00']}
+        stretch: 24, colors:[mRed, mYellow, mBlack, mBlue, mGrey], outcolors:['#FFFF00']}
     ]
 
 Drawn separately are the finest details, which can only exist in open spaces.
+(This layer does not appear in the final version)
 
     peopleGroup = [
         {index: 11, size: 1024, thresh: 1, grow: CLOUD,  minDrawSize: 4, minstretch: 1,
@@ -208,8 +212,7 @@ This is the master list of groups and encodes the order in which they are genera
         waterGroup,
         outerGroup,
         buildingGroup,
-        cityGroup,
-        peopleGroup
+        cityGroup
     ]
 
 Each layer generates a number of seeds on a timeline, and then grows the feature from the
@@ -397,8 +400,8 @@ It returns an array of rectangles to be drawn.
                             gridPoint = getPointAlignedToGrid(i, j, 134217728)
                             if (!recallCellProperty(map, gridPoint[0], gridPoint[1], 134217728, "active"))
                                 cellSkip = true
-                        # nothing else on water for now
-                        if (!cellSkip && cy.index > 18 && cy.index < 27)
+                        # nothing else on water
+                        if (!cellSkip && cy.index < 27)
                             # lookup water skip
                             gridPoint = getPointAlignedToGrid(i, j, 134217728)
                             if (recallCellProperty(map, gridPoint[0], gridPoint[1], 134217728, "active"))
