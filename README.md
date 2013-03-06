@@ -1,7 +1,8 @@
 Victory
 =======
 
-Victory is a design landscape inspired by Mondrian, specifically [Victory Boogie-Woogie](http://en.wikipedia.org/wiki/Victory_Boogie-Woogie).
+Victory is a design landscape inspired by Mondrian, specifically
+[Victory Boogie-Woogie](http://en.wikipedia.org/wiki/Victory_Boogie-Woogie).
 
 ![ScreenShot](https://raw.github.com/dribnet/victory/master/victory1024.png)
 
@@ -16,7 +17,8 @@ simulation. All graphics are generated dynamically, none of the visuals are pre-
 The world literally springs to life as you zoom or pan to look at it.
 
 The document you are reading is both the description of the program as well as the
-full algorithm itself. The programming language I have used is [literate coffeescript](http://coffeescript.org/#literate),
+full algorithm itself. The programming language I have used is
+[literate coffeescript](http://coffeescript.org/#literate),
 which was chosen because it allows me to naturally interleave the machinery of
 the algorithm with explanation and context.
 
@@ -25,8 +27,8 @@ CustomRandom
 To obtain the overall effect of predetermined variation, I needed to implement my own
 custom random number generator. This generator needs to be fully repeatable and takes
 three arguments which represent the position and depth as the seed. This implementation
-is based on
-[Michal Budzynski's JavaScript implementation](http://michalbe.blogspot.com/2011/02/javascript-random-numbers-with-custom.html)
+is based on [Michal Budzynski's JavaScript
+implementation](http://michalbe.blogspot.com/2011/02/javascript-random-numbers-with-custom.html)
 and forgoes better statistics for speed and initialization time because this program
 has the somewhat unusual characteristic of needing thousands of individual random number
 generators as the design unfolds.
@@ -35,12 +37,12 @@ By using individual random number generators spatially connected to their enviro
 locations are independent of each other given some radius of interaction, which allows
 the image tiles to be generated any order.
 
-these numbers are used again and again, so we cache them for efficiency
+These numbers are used again and again, so we cache them for efficiency
 ```coffeescript
 cachedRandomConstant = Math.pow(2, 13)+1
 cachedRandomMaximum = Math.pow(2, 50)
 ```
-when called, returns an object whose next method can be used to generate the random numbers
+When called, returns an object whose next method can be used to generate the random numbers
 (here random numbers vary between 0 and 1024)
 ```coffeescript
 CustomRandom = (x,y,s) ->
@@ -69,8 +71,9 @@ CustomRandom = (x,y,s) ->
       next : nextfn
   }  
 ```
-This additional mod function provides correct results with negative numbers. (more information
-is available [on StackOverflow](http://stackoverflow.com/questions/4467539/javascript-modulo-not-behaving)
+This additional mod function provides correct results with negative numbers.
+(more information is available [on
+StackOverflow](http://stackoverflow.com/questions/4467539/javascript-modulo-not-behaving)
 and [about.com](http://javascript.about.com/od/problemsolving/a/modulobug.htm))
 ```coffeescript
 Number.prototype.mod = (n) ->
@@ -499,8 +502,8 @@ And finally we return the aggregated list of rects to draw.
 Map
 ---
 The interface presented is a navigable map. The map interface itself is provided by
-the [excellent leaflet javascript library](leafletjs.com). This use of leaflet is
-slightly unusual in that the map itself is dynamically generated as a result
+the [excellent leaflet javascript library](http://leafletjs.com). This use of leaflet
+is slightly unusual in that the map itself is dynamically generated as a result
 of the navigation itself. To achieve this, a special subclass of leaflet's
 TileLayer class is created. This version of the class has a custom version of
 the leaflet ```drawTile``` method which tranlates coordinate spaces, delegates
