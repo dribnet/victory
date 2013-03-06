@@ -510,11 +510,6 @@ the set of rects on an HTML canvas.
     tiles = new L.TileLayer.Canvas {continuousWorld: true}
 
     tiles.drawTile = (canvas, tile, zoom) ->
-      analytics.track('DrawTile', {
-        x: tile.x
-        y: tile.y
-        zoom: zoom
-      });
       ctx = canvas.getContext '2d'
       ctx.fillStyle = darkBackground
       ctx.fillRect(0, 0, 256, 256)
@@ -555,7 +550,17 @@ custom initialization to make sure the map is created in the right place.
       crs: L.CRS.Simple
     }
     hash = new L.Hash map
-    analytics.track('Running', {});
+    # http://stackoverflow.com/questions/3437786/how-to-get-web-page-size-browser-window-size-screen-size-in-a-cross-browser-wa
+    w = window
+    d = document
+    e = d.documentElement
+    g = d.getElementsByTagName('body')[0]
+    x = w.innerWidth || e.clientWidth || g.clientWidth
+    y = w.innerHeight|| e.clientHeight|| g.clientHeight
+    analytics.track('Running', {
+      width: x,
+      height: y
+    });
 
 And lastly, some external controls for navigation.
 
