@@ -488,7 +488,7 @@ the set of rects on an HTML canvas.
 
         # ctx.fillRect.apply(ctx, [ -40, -40, 100, 100])
 
-Finally, we provide settings for the map and start it working.
+Provide settings for the map and start it working.
 I use mlevans' useful [leaflet-hash](https://github.com/mlevans/leaflet-hash)
 plugin to allow links to specific views, though I have to do some
 custom initializaiton to make sure the map is created in the right place.
@@ -497,7 +497,8 @@ custom initializaiton to make sure the map is created in the right place.
         center: new L.LatLng 584.8926, 1106.5347
         zoom: 10
     start = L.Hash.prototype.parseHash(location.hash) || defaultStart
-    map = new L.Map 'map', {
+    # TODO this added for debugging... remove
+    this.map = new L.Map 'map', {
         center: start.center, 
         zoom: start.zoom, 
         minZoom: 0,
@@ -507,3 +508,68 @@ custom initializaiton to make sure the map is created in the right place.
         crs: L.CRS.Simple
     }
     hash = new L.Hash map
+    attrib = new L.Control.Attribution
+    attrib.setPrefix ""
+    attrStr = '<a href="#" onclick="javascript:clickHome();">home</a> | '
+    attrStr += '<a href="#" onclick="javascript:clickDemo();">demo</a> | '
+    attrStr += '<a href="https://github.com/dribnet/victory/">code</a>'
+    attrib.addAttribution attrStr
+    map.addControl attrib
+
+
+And lastly, some external controls for navigation.
+
+    travellingHome = false
+    runningDemo = false
+
+    continueToPointZoomingIn = (zoom) ->
+
+    # speed is seconds per screen (roughly)
+    travelToPoint = (latlng, speed, callback) ->
+      offset = map._getNewTopLeftPoint(defaultStart.center).subtract(map._getTopLeftPoint())
+      size = map.getSize()
+      relativeManDist = (Math.abs(offset.x) + Math.abs(offset.y)) / (size.x + size.y);
+      timeToPan = speed * relativeManDist;
+      if (timeToPan < 0.25) then timeToPan = 0.25;
+      console.log("Screens away: " + relativeManDist + " so " + timeToPan)
+      map.on({
+        moveend: ->
+          map.off("moveend", this.moveend);
+          callback() if callback?
+      })
+      map.panBy(offset, timeToPan, false, true)
+
+    zoomToward = (zoom) ->
+      if (map.getZoom() < zoom)
+        map.zoomIn()
+      else if (map.getZoom() > zoom)
+        map.zoomOut()
+
+    this.clickHome = () ->
+        map.setView(defaultStart.center, defaultStart.zoom)      
+
+    this.clickDemo = () ->
+        panfn = ->
+          travelToPoint defaultStart.center, 20.0, ->
+              console.log("You did it")
+              map.on({
+                zoomend: ->
+                  if(map.getZoom() == defaultStart.zoom)
+                    map.off('zoomend', this.zoomend)
+                    window.setTimeout panfn, 2000
+                  else
+                    window.setTimeout zoomToward, 5000, defaultStart.zoom
+              });
+              zoomToward(defaultStart.zoom)
+        if(map.getZoom() == 4)
+          panfn()
+        else
+          map.on({
+            zoomend: ->
+              if(map.getZoom() == 4)
+                map.off('zoomend', this.zoomend)
+                window.setTimeout panfn, 2000
+              else
+                window.setTimeout zoomToward, 5000, 4
+          });
+          zoomToward(4)
