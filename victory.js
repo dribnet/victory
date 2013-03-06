@@ -601,11 +601,4 @@
     return hash.update();
   };
 
-  this.debugBack = function() {
-    curLinkIndex = (curLinkIndex + linkPath.length - 1) % linkPath.length;
-    location.hash = linkPath[curLinkIndex];
-    console.log("at " + curLinkIndex + " of " + linkPath.length);
-    return hash.update();
-  };
-
 }).call(this);
