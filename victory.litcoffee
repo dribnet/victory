@@ -613,11 +613,3 @@ And lastly, some external controls for navigation.
       location.hash = linkPath[curLinkIndex]
       console.log("at " + curLinkIndex + " of " + linkPath.length);
       hash.update()
-
-
-    this.debugBack = () ->
-      curLinkIndex = (curLinkIndex + linkPath.length - 1) % linkPath.length;
-      location.hash = linkPath[curLinkIndex]
-      console.log("at " + curLinkIndex + " of " + linkPath.length);
-      hash.update()
-
