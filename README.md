@@ -273,7 +273,7 @@ A CLOUD is a group of scattered squares
       curx = (c.x+i*cy.size)
       for j in [0-c.extent1 ... c.extent2]
         cury = (c.y+i*cy.size)
-        abort = false;
+        abort = false
         rng = CustomRandom(curx, cury, cy.size)
         # abort randomly to get that cloud effect
         n = main_rng.next()
@@ -561,7 +561,7 @@ And lastly, some external controls for navigation.
     attrib.addAttribution attrStr
     map.addControl attrib
 
-    curLinkIndex = 1;
+    curLinkIndex = 1
     linkPath = [
       "#10/584.8931/1106.5347",  # home
       "#9/584.885/1106.920",
@@ -595,12 +595,12 @@ And lastly, some external controls for navigation.
     ]
 
     this.clickHome = () ->
-      curLinkIndex = 0;
+      curLinkIndex = 0
       location.hash = linkPath[0]
       hash.update()
 
     this.clickDemo = () ->
-      curLinkIndex = (curLinkIndex + 1) % linkPath.length;
+      curLinkIndex = (curLinkIndex + 1) % linkPath.length
       location.hash = linkPath[curLinkIndex]
-      console.log("at " + curLinkIndex + " of " + linkPath.length);
+      console.log("at " + curLinkIndex + " of " + linkPath.length)
       hash.update()
