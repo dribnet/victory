@@ -13,7 +13,7 @@ stretches in all directions.
 
 This work presented many technical challenges. Algorithmically, the visuals are the
 result of a dynamic process which is a hand-crafted hybrid of fractal and
-simulation. All graphics are generated dynamically, none of the visuals are pre-computed.
+simulation. All graphics are generated dynamically - none of the visuals are pre-computed.
 The world literally springs to life as you zoom or pan to look at it.
 
 The document you are reading is both the description of the program as well as the
@@ -35,7 +35,7 @@ generators as the design unfolds.
 
 By using individual random number generators spatially connected to their environment,
 locations are independent of each other given some radius of interaction, which allows
-the image tiles to be generated any order.
+the image tiles to be generated in any order.
 
 These numbers are used again and again, so we cache them for efficiency
 ```coffeescript
@@ -43,7 +43,7 @@ cachedRandomConstant = Math.pow(2, 13)+1
 cachedRandomMaximum = Math.pow(2, 50)
 ```
 When called, returns an object whose next method can be used to generate the random numbers
-(here random numbers vary between 0 and 1024)
+(here random numbers vary between 0 and 1024).
 ```coffeescript
 CustomRandom = (x,y,s) ->
   constant = cachedRandomConstant
@@ -79,7 +79,7 @@ and [about.com](http://javascript.about.com/od/problemsolving/a/modulobug.htm))
 Number.prototype.mod = (n) ->
   ((this%n)+n)%n
 ```
-A utility for snapping an x,y point to the grid, which itself varies as a function of depth.
+A utility for snapping an x,y point to a grid. Grid spacing varies as a function of depth.
 ```coffeescript
 getPointAlignedToGrid = (x, y, s) ->
   gx = x - x.mod(s)
@@ -120,8 +120,8 @@ indexSizeTable =
 The layers are grouped into lists so that the simulation can be ordered. Layers
 within a group can interact with each other in a timeline, but subsequent groups
 spring into being after the group before them has completed. In this way large
-features can be laid down followed by smaller ones, though sometimes the layers
-can interact as they are growing.
+features can be laid down followed by smaller ones, though the different sized
+layers within a group can interact as they are growing.
 
 Most of the overall design is encoded in these magic constants.
 
@@ -193,7 +193,7 @@ cityGroup = [
 ]
 ```
 Drawn separately are the finest details, which can only exist in open spaces.
-(This layer does not appear in the final version)
+(this layer does not appear in the final version)
 ```coffeescript
 peopleGroup = [
   {index: 11, size: 1024, thresh: 1, grow: CLOUD,
@@ -202,7 +202,8 @@ peopleGroup = [
 ]
 ```
 The outer group defines the largest features which are seen when zooming out. waterGroup
-is the furtherst out so that it is established on its own timeline.
+is the furtherst out and is established on its own timeline so that nothing will be
+on top of it.
 ```coffeescript
 waterGroup = [
   {index: 28, size: 134217728, thresh: 30, grow: POOL,
@@ -244,7 +245,7 @@ layerGroups = [
 ```
 Each layer generates a number of seeds on a timeline, and then grows the feature from the
 seed by running the timeline in order. This is the function that grows an individual
-seed into a feature. The result is a set of rectangle objects pushed onto the provided
+seed into a feature. The result is a list of rectangle objects pushed onto the provided
 rects array.
 ```coffeescript
 growSeed = (c, x1, y1, scalex, scaley, rects, map, cy) ->
@@ -285,7 +286,7 @@ A CLOUD is a group of scattered squares
 ```
 Checks are done here to not draw on top of other layers.
 ```coffeescript
-    if (!abort && cy.index >= 11 && cy.index <= 19)
+        if (!abort && cy.index >= 11 && cy.index <= 19)
           # lookup out of city colors
           gridPoint = getPointAlignedToGrid(curx, cury, 4194304)
           onCity = recallCellProperty(map, gridPoint[0], gridPoint[1],
@@ -309,7 +310,8 @@ Checks are done here to not draw on top of other layers.
           rememberCellProperty(map, (c.x+i*cy.size), (c.y+j*cy.size),
               cy.size, "active", true)
 ```
-LINE is a row of squares and a CROSS is two lines and shares logic
+LINE is a row or column of squares and a CROSS is a row and a column together.
+These shares logic here - a LINE is considered a special case of a CROSS.
 ```coffeescript
   if(cy.grow == CROSS || (cy.grow == LINE))
     for isVertical in [true, false]
@@ -329,7 +331,7 @@ LINE is a row of squares and a CROSS is two lines and shares logic
 Lines are drawn from the center out so that they can be stopped upon
 hitting a barrier.
 ```coffeescript
-    for i in [start ... stopat] by inc
+        for i in [start ... stopat] by inc
           colors = cy.colors
           rng
           curx
@@ -363,7 +365,6 @@ hitting a barrier.
               if(!onCity)
                 colors = cy.outcolors
           if (!abort)
-            # console.log("Setting to " + cindex + "," + colors[cindex])
             r.color = colors[cindex]
             r.rect = [(curx-x1)*scalex, (cury-y1)*scaley,
                 cy.size*scalex, cy.size*scaley]
@@ -398,102 +399,102 @@ The runlist is a growing in-order list of scheduled tasks. Here I'm
 using shinout's [SortedList](https://github.com/shinout/SortedList)
 javascript container class.
 ```coffeescript
-  runlist = SortedList.create {
-        compare:  (a,b) ->
-          if(a.tstart != b.tstart)
-            return a.tstart - b.tstart
-          if(a.x != b.x)
-            return a.x - b.x
-          return a.y - b.y
-      }
+    runlist = SortedList.create {
+      compare:  (a,b) ->
+        if(a.tstart != b.tstart)
+          return a.tstart - b.tstart
+        if(a.x != b.x)
+          return a.x - b.x
+        return a.y - b.y
+    }
 ```
 Iterate through all layers in the group and build up
 list of pending tasks.
 ```coffeescript
-  for cy in lg
-        # short circuit out if features are too small
-        if(cy.size * scalex < cy.minDrawSize)
-          continue 
+    for cy in lg
+      # short circuit out if features are too small
+      if(cy.size * scalex < cy.minDrawSize)
+        continue 
 
-        maxstretch = cy.stretch
+      maxstretch = cy.stretch
 
-        # iteration bounds
-        gridPoint = getPointAlignedToGrid(x1, y1, cy.size)
-        dx = cy.size
-        dy = cy.size
-        size = cy.size
-        xmin = gridPoint[0] - (maxstretch * dx)
-        ymin = gridPoint[1] - (maxstretch * dy)
-        gridPoint = getPointAlignedToGrid(x2, y2, cy.size)
-        xmax = gridPoint[0] + (maxstretch * dx) + dx
-        ymax = gridPoint[1] + (maxstretch * dy) + dy
+      # iteration bounds
+      gridPoint = getPointAlignedToGrid(x1, y1, cy.size)
+      dx = cy.size
+      dy = cy.size
+      size = cy.size
+      xmin = gridPoint[0] - (maxstretch * dx)
+      ymin = gridPoint[1] - (maxstretch * dy)
+      gridPoint = getPointAlignedToGrid(x2, y2, cy.size)
+      xmax = gridPoint[0] + (maxstretch * dx) + dx
+      ymax = gridPoint[1] + (maxstretch * dy) + dy
 
-        c = {}
+      c = {}
 
-        # the cells themselves
-        grid = new Array((xmax-xmin)/dx)
+      # the cells themselves
+      grid = new Array((xmax-xmin)/dx)
 
-        Nthresh = cy.thresh
+      Nthresh = cy.thresh
 
-        stepx = 0
-        for i in [xmin...xmax] by dx
-          grid[stepx] = new Array((ymax-ymin)/dy)
-          stepy = 0
-          for j in [ymin...ymax] by dy
-            cellSkip = false
-            # water filter
-            if (!cellSkip && cy.index == 27)
-              # lookup water skip
-              gridPoint = getPointAlignedToGrid(i, j, 134217728)
-              if (!recallCellProperty(map, gridPoint[0], gridPoint[1],
-                  134217728, "active"))
-                cellSkip = true
-            # nothing else on water
-            if (!cellSkip && cy.index < 27)
-              # lookup water skip
-              gridPoint = getPointAlignedToGrid(i, j, 134217728)
-              if (recallCellProperty(map, gridPoint[0], gridPoint[1],
-                  134217728, "active"))
-                cellSkip = true
-            # don't cover up cities before layer 18
-            if (!cellSkip && cy.index > 20 && cy.index < 23)
-              # lookup city skip
-              gridPoint = getPointAlignedToGrid(i, j, 4194304)
-              if (recallCellProperty(map, gridPoint[0], gridPoint[1],
-                  4194304, "active"))
-                cellSkip = true
-            # city filter
-            if (!cellSkip && cy.index < 18)
-              # lookup city skip
-              gridPoint = getPointAlignedToGrid(i, j, 4194304)
-              if (!recallCellProperty(map, gridPoint[0], gridPoint[1],
-                  4194304, "active"))
-                cellSkip = true
-            if (!cellSkip)
-              rng = CustomRandom(i, j, cy.size)
-              n = rng.next()
-              if (n < Nthresh)
-                c = {}
-                c.cy = cy
-                c.x = i
-                c.y = j
-                c.size = scalex
-                c.dir = rng.next() < 512 ? 0 : 1
-                c.tstart = rng.next()
-                c.extent1 = cy.minstretch + 
-                    rng.next().mod(cy.stretch - cy.minstretch)
-                c.extent2 = cy.minstretch + 
-                    rng.next().mod(cy.stretch - cy.minstretch)
-                grid[stepx][stepy] = c
-                runlist.insert(c)
-            stepy += 1
-          stepx += 1
+      stepx = 0
+      for i in [xmin...xmax] by dx
+        grid[stepx] = new Array((ymax-ymin)/dy)
+        stepy = 0
+        for j in [ymin...ymax] by dy
+          cellSkip = false
+          # water filter
+          if (!cellSkip && cy.index == 27)
+            # lookup water skip
+            gridPoint = getPointAlignedToGrid(i, j, 134217728)
+            if (!recallCellProperty(map, gridPoint[0], gridPoint[1],
+                134217728, "active"))
+              cellSkip = true
+          # nothing else on water
+          if (!cellSkip && cy.index < 27)
+            # lookup water skip
+            gridPoint = getPointAlignedToGrid(i, j, 134217728)
+            if (recallCellProperty(map, gridPoint[0], gridPoint[1],
+                134217728, "active"))
+              cellSkip = true
+          # don't cover up cities before layer 18
+          if (!cellSkip && cy.index > 20 && cy.index < 23)
+            # lookup city skip
+            gridPoint = getPointAlignedToGrid(i, j, 4194304)
+            if (recallCellProperty(map, gridPoint[0], gridPoint[1],
+                4194304, "active"))
+              cellSkip = true
+          # city filter
+          if (!cellSkip && cy.index < 18)
+            # lookup city skip
+            gridPoint = getPointAlignedToGrid(i, j, 4194304)
+            if (!recallCellProperty(map, gridPoint[0], gridPoint[1],
+                4194304, "active"))
+              cellSkip = true
+          if (!cellSkip)
+            rng = CustomRandom(i, j, cy.size)
+            n = rng.next()
+            if (n < Nthresh)
+              c = {}
+              c.cy = cy
+              c.x = i
+              c.y = j
+              c.size = scalex
+              c.dir = rng.next() < 512 ? 0 : 1
+              c.tstart = rng.next()
+              c.extent1 = cy.minstretch + 
+                  rng.next().mod(cy.stretch - cy.minstretch)
+              c.extent2 = cy.minstretch + 
+                  rng.next().mod(cy.stretch - cy.minstretch)
+              grid[stepx][stepy] = c
+              runlist.insert(c)
+          stepy += 1
+        stepx += 1
 ```
 Whew. Now that we have a sorted list of tasks from the layers, we can
 run each in order.
 ```coffeescript
-  for runner in runlist
-        growSeed(runner, x1, y1, scalex, scaley, rects, map, runner.cy)
+    for runner in runlist
+      growSeed(runner, x1, y1, scalex, scaley, rects, map, runner.cy)
 ```
 And finally we return the aggregated list of rects to draw.
 ```coffeescript
@@ -504,7 +505,7 @@ Map
 The interface presented is a navigable map. The map interface itself is provided by
 the [excellent leaflet javascript library](http://leafletjs.com). This use of leaflet
 is slightly unusual in that the map itself is dynamically generated as a result
-of the navigation itself. To achieve this, a special subclass of leaflet's
+of navigation. To achieve this, a special subclass of leaflet's
 TileLayer class is created. This version of the class has a custom version of
 the leaflet ```drawTile``` method which tranlates coordinate spaces, delegates
 all the hard work to the ```getRectsIn``` function above, and then renders
@@ -542,8 +543,7 @@ defaultStart =
   center: new L.LatLng 584.8926, 1106.5347
   zoom: 10
 start = L.Hash.prototype.parseHash(location.hash) || defaultStart
-# TODO this added for debugging... remove
-this.map = new L.Map 'map', {
+map = new L.Map 'map', {
   center: start.center, 
   zoom: start.zoom, 
   minZoom: 0,
@@ -555,55 +555,55 @@ this.map = new L.Map 'map', {
 hash = new L.Hash map
 ```
 And lastly, some external controls for navigation.
+```coffeescript
+attrib = new L.Control.Attribution
+attrib.setPrefix ""
+attrStr = '<a href="#" onclick="javascript:clickDemo();">tour</a> | '
+attrStr += '<a href="#" onclick="javascript:clickHome();">home</a> | '
+attrStr += '<a href="https://github.com/dribnet/victory/">code</a>'
+attrib.addAttribution attrStr
+map.addControl attrib
 
-    attrib = new L.Control.Attribution
-    attrib.setPrefix ""
-    attrStr = '<a href="#" onclick="javascript:clickDemo();">tour</a> | '
-    attrStr += '<a href="#" onclick="javascript:clickHome();">home</a> | '
-    attrStr += '<a href="https://github.com/dribnet/victory/">code</a>'
-    attrib.addAttribution attrStr
-    map.addControl attrib
+curLinkIndex = 1
+linkPath = [
+  "#10/584.8931/1106.5347",  # home
+  "#9/584.885/1106.920",
+  "#7/584.398/1107.727",
+  "#4/581.66/1111.84",
+  "#0/572.1/1127.6",
+  "#0/448/1374",
+  "#2/398.4/1492.8",
+  "#4/376.78/1544.72",
+  "#6/369.914/1552.977",
+  "#8/369.908/1552.982",
+  "#10/370.0034/1552.8345",
+  "#12/370.0756/1552.8522",
+  "#9/370.0752/1552.8545",
+  "#5/370.078/1552.859",
+  "#1/370/1553",
+  "#1/186/1521",
+  "#3/156.6/1558.0",
+  "#5/148.141/1580.500",
+  "#7/148.129/1580.500",
+  "#10/147.8325/1580.6621",
+  "#10/147.5903/1580.8340",
+  "#10/147.0483/1581.2158",
+  "#10/146.8130/1581.2773",
+  "#7/147.145/1580.320",
+  "#4/148.66/1575.88",
+  "#1/167/1536",
+  "#0/403/1158",
+  "#2/584.8931/1106.5347"
+  "#7/584.8931/1106.5347"
+]
 
-    curLinkIndex = 1
-    linkPath = [
-      "#10/584.8931/1106.5347",  # home
-      "#9/584.885/1106.920",
-      "#7/584.398/1107.727",
-      "#4/581.66/1111.84",
-      "#0/572.1/1127.6",
-      "#0/448/1374",
-      "#2/398.4/1492.8",
-      "#4/376.78/1544.72",
-      "#6/369.914/1552.977",
-      "#8/369.908/1552.982",
-      "#10/370.0034/1552.8345",
-      "#12/370.0756/1552.8522",
-      "#9/370.0752/1552.8545",
-      "#5/370.078/1552.859",
-      "#1/370/1553",
-      "#1/186/1521",
-      "#3/156.6/1558.0",
-      "#5/148.141/1580.500",
-      "#7/148.129/1580.500",
-      "#10/147.8325/1580.6621",
-      "#10/147.5903/1580.8340",
-      "#10/147.0483/1581.2158",
-      "#10/146.8130/1581.2773",
-      "#7/147.145/1580.320",
-      "#4/148.66/1575.88",
-      "#1/167/1536",
-      "#0/403/1158",
-      "#2/584.8931/1106.5347"
-      "#7/584.8931/1106.5347"
-    ]
+this.clickHome = () ->
+  curLinkIndex = 0
+  location.hash = linkPath[0]
+  hash.update()
 
-    this.clickHome = () ->
-      curLinkIndex = 0
-      location.hash = linkPath[0]
-      hash.update()
-
-    this.clickDemo = () ->
-      curLinkIndex = (curLinkIndex + 1) % linkPath.length
-      location.hash = linkPath[curLinkIndex]
-      console.log("at " + curLinkIndex + " of " + linkPath.length)
-      hash.update()
+this.clickDemo = () ->
+  curLinkIndex = (curLinkIndex + 1) % linkPath.length
+  location.hash = linkPath[curLinkIndex]
+  hash.update()
+```
