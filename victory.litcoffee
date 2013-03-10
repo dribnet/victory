@@ -152,6 +152,10 @@ Elements are grown from seeds. Each seed can grow as one of the following primit
     POOL   = 3
     CLOUD  = 4
 
+Turn this on to not draw details when zooming out.
+
+    skipDetail = false;
+
 The layers are defined inline with the groups that contain them. Not all fields are
 necessary for all layers, and sometimes debug or other information is added to a layer
 for convenience.
@@ -413,7 +417,10 @@ list of pending tasks.
 
         for cy in lg
           # short circuit out if features are too small
-          if(cy.size * scalex < cy.minDrawSize)
+          if(skipDetail && cy.size * scalex < cy.minDrawSize)
+            continue 
+
+          if(!skipDetail && cy.size * scalex < 1)
             continue 
 
           maxstretch = cy.stretch
