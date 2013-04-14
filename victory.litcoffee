@@ -520,7 +520,7 @@ the set of rects on an HTML canvas.
 
     tiles = new L.TileLayer.Canvas {continuousWorld: true}
 
-    tiles.drawTile = (canvas, tile, zoom) ->
+    this.renderTile = tiles.drawTile = (canvas, tile, zoom) ->
       ctx = canvas.getContext '2d'
       ctx.fillStyle = darkBackground
       ctx.fillRect(0, 0, 256, 256)
