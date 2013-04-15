@@ -9,14 +9,13 @@ var express = require('express')
   , http = require('http')
   , fs = require('fs')
   , mkdirp = require('mkdirp')
-  , async = require('async')
   , bagpipe = require('bagpipe')
   , path = require('path');
 
 var app = express();
 
 app.configure(function(){
-  app.set('port', process.env.PORT || 3006);
+  app.set('port', process.env.PORT || 3007);
   app.set('views', __dirname + '/views');
   app.set('view engine', 'jade');
   app.use(express.favicon());
@@ -43,19 +42,13 @@ app.post('/save', function(req, res) {
   var fileBase = "tile_" + b.x + "_" + b.y + ".png";
   var path = "x" + (64 * Math.floor(b.x / 64)) + "_y" + (64 * Math.floor(b.y / 64));
   var fileName = path + "/" + fileBase;
-  console.log("saving file " + fileName);
-  bag.push(fs.writeFile, fileName, base64Data, 'base64', function(err) {
-    console.log(err);
-  // bag.push(function () {
-    // mkdirp(path, function(err) {
-      // if (err) console.error(err)
-      // else
-
-      // fs.writeFile(fileName, base64Data, 'base64', function(err) {
-      //   console.log(err);
-      // });
-
-    // });
+  // console.log("saving file " + fileName);
+  mkdirp(path, function(err) {
+    if (err) console.error(err)
+    else bag.push(fs.writeFile, fileName, base64Data, 'base64', function(err) {
+      console.log("saved file " + fileName + ", " + err);
+      // console.log(err);
+    });
   });
   // console.dir(req.body);
   res.send("done: " + fileName);
