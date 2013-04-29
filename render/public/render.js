@@ -50,13 +50,21 @@ function pausecomp(millis)
 
 var mainq = queue(2);
 
-// warm up with -32 to 32
-// for(var x=-448; x<64; x++) {
-//   for(var y=-256; y<256; y++) {
-for(var lx=-448; lx<-448+64; lx++) {
+for(var lx=-640; lx<-640+64; lx++) {
+// for(var lx=-576; lx<-576+64; lx++) {
+// for(var lx=-512; lx<-512+64; lx++) {
+// for(var lx=-448; lx<-448+64; lx++) {
+// for(var lx=-384; lx<-384+64; lx++) {
+// for(var lx=-320; lx<-320+64; lx++) {
+// for(var lx=-256; lx<-256+64; lx++) {
+// for(var lx=-192; lx<-192+64; lx++) {
+// for(var lx=-128; lx<-128+64; lx++) {
+// for(var lx=-64; lx<-64+64; lx++) {
+// for(var lx=0; lx<0+64; lx++) {
+// for(var lx=64; lx<64+64; lx++) {
   mainq.defer(function(x, callback) {
     console.log("Running mainq column " + x);
-    var colq = queue(8);
+    var colq = queue(64);
     for(var y=-256; y<-256+64; y++) {
     // for(var y=-192; y<-192+64; y++) {
     // for(var y=-128; y<-128+64; y++) {
