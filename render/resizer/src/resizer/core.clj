@@ -14,6 +14,15 @@
 
 (def prefix "../tiles/")
 
+(defn to-file-name [zoom x y]
+  (str prefix zoom "/" x "/" y ".png"))
+
+(defn file-exists? [s]
+  (.exists (jio/as-file s)))
+
+(defn tile-exists? [zoom x y]
+  (file-exists? (to-file-name zoom x y)))
+
 ; resize a file like ../18/0/0.png to ../17/0/0.png
 (defn down-sample [zoom x y]
   (let [im (BufferedImage. 1024 1024 BufferedImage/TYPE_INT_RGB)
@@ -22,25 +31,33 @@
         hg (.createGraphics him)
         qim (BufferedImage. 256 256 BufferedImage/TYPE_INT_RGB)
         qg (.createGraphics qim)
-        outfile (str prefix (- zoom 1) "/" (/ x 2) "/" (/ y 2) ".png")]
-    (doseq [xs (range 4)]
-      (let [cx (+ x xs -1)]
-        (doseq [ys (range 4)]
-          (let [cy (+ y ys -1)
-                infile  (str prefix zoom "/" cx "/" cy ".png")]
-            ; (println (str "processing " cx "," cy))
-            (.drawImage g
-              (ImageIO/read (File. infile))
-              (* 256 xs) (* 256 ys) Color/black nil)
-            ))))
-    ; (write-file im "test.png")
-    (.setRenderingHint hg RenderingHints/KEY_INTERPOLATION
-                       RenderingHints/VALUE_INTERPOLATION_BICUBIC)
-    (.drawImage hg im 0 0 512 512 nil)
-    ; (write-file him "half.png")
-    (.drawImage qg him 0 0 256 256 128 128 384 384 nil)
-    (jio/make-parents outfile)
-    (write-file qim outfile)
+        outfile (str prefix (- zoom 1) "/" (/ x 2) "/" (/ y 2) ".png")
+        in-tiles (for [cx (range (- x 1) (+ x 3)) cy (range (- y 1) (+ y 3))] [zoom cx cy])]
+    (if (and (even? x)
+             (even? y)
+             (not (file-exists? outfile))
+             (every? (partial apply tile-exists?) in-tiles))
+      (do
+        (doseq [xs (range 4)]
+          (let [cx (+ x xs -1)]
+            (doseq [ys (range 4)]
+              (let [cy (+ y ys -1)
+                    infile  (str prefix zoom "/" cx "/" cy ".png")]
+                ; (println (str "processing " cx "," cy))
+                (.drawImage g
+                  (ImageIO/read (File. infile))
+                  (* 256 xs) (* 256 ys) Color/black nil)
+                ))))
+        ; (write-file im "test.png")
+        (.setRenderingHint hg RenderingHints/KEY_INTERPOLATION
+                           RenderingHints/VALUE_INTERPOLATION_BICUBIC)
+        (.drawImage hg im 0 0 512 512 nil)
+        ; (write-file him "half.png")
+        (.drawImage qg him 0 0 256 256 128 128 384 384 nil)
+        (jio/make-parents outfile)
+        (write-file qim outfile)
+        true)
+      false)
     ; (write-file qim "tile.png")
     ))
 
@@ -51,27 +68,35 @@
         him (BufferedImage. 256 256 BufferedImage/TYPE_INT_RGB)
         hg (.createGraphics him)
         infile (str prefix zoom "/" x "/" y ".png")
-        nzoom (inc zoom)]
-    (.setRenderingHint hg RenderingHints/KEY_INTERPOLATION
-                       RenderingHints/VALUE_INTERPOLATION_NEAREST_NEIGHBOR)
-    (println (str "reading " infile))
-    (.drawImage g (ImageIO/read (File. infile))
-      0 0 512 512 nil)
+        nzoom (inc zoom)
+        out-tiles [ [nzoom      (* x 2)       (* y 2)]
+                    [nzoom      (* x 2)  (inc (* y 2))]
+                    [nzoom (inc (* x 2))      (* y 2)]
+                    [nzoom (inc (* x 2)) (inc (* y 2))]] ] 
+    (if (not (every? (partial apply tile-exists?) out-tiles))
+      (do
 
-    ; make two images at zoom+1, x*2
-    (jio/make-parents (str prefix nzoom "/" (* x 2) "/out.png"))
-    (.drawImage hg im 0 0 256 256 0 0 256 256 nil)
-    (write-file him (str prefix nzoom "/" (* x 2) "/" (* y 2) ".png"))
-    (.drawImage hg im 0 0 256 256 0 256 256 512 nil)
-    (write-file him (str prefix nzoom "/" (* x 2) "/" (inc (* y 2)) ".png"))
+        (.setRenderingHint hg RenderingHints/KEY_INTERPOLATION
+                           RenderingHints/VALUE_INTERPOLATION_NEAREST_NEIGHBOR)
+        ; (println (str "reading " infile))
+        (.drawImage g (ImageIO/read (File. infile))
+          0 0 512 512 nil)
 
-    ; make two images at zoom+1, x*2+1
-    (jio/make-parents (str prefix nzoom "/" (inc (* x 2)) "/out.png"))
-    (.drawImage hg im 0 0 256 256 256 0 512 256 nil)
-    (write-file him (str prefix nzoom "/" (inc (* x 2)) "/" (* y 2) ".png"))
-    (.drawImage hg im 0 0 256 256 256 256 512 512 nil)
-    (write-file him (str prefix nzoom "/" (inc (* x 2)) "/" (inc (* y 2)) ".png"))
-    ))
+        ; make two images at zoom+1, x*2
+        (jio/make-parents (str prefix nzoom "/" (* x 2) "/out.png"))
+        (.drawImage hg im 0 0 256 256 0 0 256 256 nil)
+        (write-file him (str prefix nzoom "/" (* x 2) "/" (* y 2) ".png"))
+        (.drawImage hg im 0 0 256 256 0 256 256 512 nil)
+        (write-file him (str prefix nzoom "/" (* x 2) "/" (inc (* y 2)) ".png"))
+
+        ; make two images at zoom+1, x*2+1
+        (jio/make-parents (str prefix nzoom "/" (inc (* x 2)) "/out.png"))
+        (.drawImage hg im 0 0 256 256 256 0 512 256 nil)
+        (write-file him (str prefix nzoom "/" (inc (* x 2)) "/" (* y 2) ".png"))
+        (.drawImage hg im 0 0 256 256 256 256 512 512 nil)
+        (write-file him (str prefix nzoom "/" (inc (* x 2)) "/" (inc (* y 2)) ".png"))
+        true)
+      false)))
 
 ; (doseq [i (range -1 4)]
 ;   (doseq [j (range -1 4)]
@@ -100,5 +125,6 @@
 (defn -main
   "I don't do a whole lot."
   [& args]
-  (resize 18 0 0)
+  (up-sample 18 0 0)
+  (down-sample 18 0 0)
   (println "Hello, World!"))
