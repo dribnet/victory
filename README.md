@@ -4,7 +4,9 @@ Victory
 Victory is a design landscape inspired by Mondrian, specifically
 [Victory Boogie-Woogie](http://en.wikipedia.org/wiki/Victory_Boogie-Woogie).
 
-![ScreenShot](https://raw.github.com/dribnet/victory/master/victory1024.png)
+<p align="center">
+  <img src="https://raw.github.com/dribnet/victory/master/victory45b640.png" alt="ScreenShot"/>
+</p>
 
 Design landscapes are expansive drawing surfaces. In this case, the surface stretches
 infinitely in two dimensions with several layers of depth throughout. Mondrain was influenced
