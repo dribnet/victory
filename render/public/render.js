@@ -50,27 +50,25 @@ function pausecomp(millis)
 
 var mainq = queue(2);
 
-for(var lx=-640; lx<-640+64; lx++) {
-// for(var lx=-576; lx<-576+64; lx++) {
-// for(var lx=-512; lx<-512+64; lx++) {
-// for(var lx=-448; lx<-448+64; lx++) {
-// for(var lx=-384; lx<-384+64; lx++) {
-// for(var lx=-320; lx<-320+64; lx++) {
-// for(var lx=-256; lx<-256+64; lx++) {
-// for(var lx=-192; lx<-192+64; lx++) {
-// for(var lx=-128; lx<-128+64; lx++) {
-// for(var lx=-64; lx<-64+64; lx++) {
-// for(var lx=0; lx<0+64; lx++) {
-// for(var lx=64; lx<64+64; lx++) {
-  mainq.defer(function(x, callback) {
-    console.log("Running mainq column " + x);
-    var colq = queue(64);
-    for(var y=-256; y<-256+64; y++) {
-    // for(var y=-192; y<-192+64; y++) {
-    // for(var y=-128; y<-128+64; y++) {
-    // for(var y=-64; y<-64+64; y++) {
-    // for(var y=0; y<0+64; y++) {
-    // for(var y=64; y<64+64; y++) {
+/* should be -640 -> 640 in x and y */
+
+/* initial extent -640 < x < 128
+                  -256 < y < 128
+                   4,947,802,324,992 px -> 9 * 2^39 */
+
+// adding -640 < x < 128
+//         128 < y < 192
+//         192 < y < 320
+//         320 < y < 512
+
+// now adding 128 < x < 640
+          // -640 < y < 640
+
+for(var ly=512; ly<640; ly++) {
+  mainq.defer(function(y, callback) {
+    console.log("Running mainq row " + y);
+    var colq = queue(640+128);
+      for(var x=-640; x<640; x++) {
       console.log("Queing tile " + x + "," + y);
       var canvas = renderToCanvas(x,y);
       var dataURL = canvas.toDataURL("image/png");
@@ -80,10 +78,10 @@ for(var lx=-640; lx<-640+64; lx++) {
       // saveToServer(x,y,canvas.toDataURL("image/png"));
     }
     colq.awaitAll(function(error, results) {
-      console.log("all done with column " + x);
+      console.log("all done with row " + y);
       callback(null);
     });
-  }, lx);
+  }, ly);
   // pausecomp(10000);
 }
 

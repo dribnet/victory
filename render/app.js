@@ -39,9 +39,8 @@ app.use(express.bodyParser());
 app.post('/save', function(req, res) {
   var b = req.body;
   var base64Data = b.data.replace(/^data:image\/png;base64,/,"");
-  var fileBase = "tile_" + b.x + "_" + b.y + ".png";
-  var path = "x" + (64 * Math.floor(b.x / 64)) + "_y" + (64 * Math.floor(b.y / 64));
-  var fileName = path + "/" + fileBase;
+  var path = "rendered/60/" + b.x;
+  var fileName = path + "/" + b.y + ".png";
   // console.log("saving file " + fileName);
   mkdirp(path, function(err) {
     if (err) console.error(err)

@@ -14,6 +14,7 @@
     false))
 
 (def ref-layer 60)
+(def last-layer 63)
 
 (defn process-exists [z x y]
   (if (tile-exists? z x y)
@@ -49,10 +50,11 @@
 
 (defn full-sweep []
   (loop [dx ref-layer]
-    (if-not (zero? (layer-sweep dx))
+    (if (not (zero? (layer-sweep dx)))
       (recur (dec dx))))
   (loop [ix (inc ref-layer)]
-    (if-not (zero? (layer-sweep ix))
+    (if (and (<= ix last-layer)
+             (not (zero? (layer-sweep ix))))
       (recur (inc ix)))))
 
 
