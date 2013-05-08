@@ -12,7 +12,7 @@
     (catch IOException e (str "file - " s " - caught exception: " (.getMessage e)))
     ))
 
-(def prefix "../tiles/")
+(def prefix "victory/")
 
 (defn to-file-name [zoom x y]
   (str prefix zoom "/" x "/" y ".png"))

@@ -64,11 +64,16 @@ var mainq = queue(2);
 // now adding 128 < x < 640
           // -640 < y < 640
 
-for(var ly=512; ly<640; ly++) {
+// final round: -640 .. -256 in y
+//              -640 ..  128 in x
+
+var starty = -576;
+
+for(var ly=starty; ly<(starty+64); ly++) {
   mainq.defer(function(y, callback) {
     console.log("Running mainq row " + y);
     var colq = queue(640+128);
-      for(var x=-640; x<640; x++) {
+      for(var x=-640; x<128; x++) {
       console.log("Queing tile " + x + "," + y);
       var canvas = renderToCanvas(x,y);
       var dataURL = canvas.toDataURL("image/png");
