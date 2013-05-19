@@ -58,3 +58,9 @@
       (recur (inc ix)))))
 
 
+(defn -main
+  "I don't do a whole lot."
+  [& args]
+  (up-sample 18 0 0)
+  (down-sample 18 0 0)
+  (println "Hello, World!"))
