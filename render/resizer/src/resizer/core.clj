@@ -12,6 +12,12 @@
     (catch IOException e (str "file - " s " - caught exception: " (.getMessage e)))
     ))
 
+(defn write-empty-file [s]
+  (spit s "empty"))
+
+(defn remove-file [s]
+  (jio/delete-file s))
+
 (def prefix "/NoBackup/test/")
 
 (defn to-file-name [zoom x y]
@@ -32,30 +38,46 @@
         qim (BufferedImage. 256 256 BufferedImage/TYPE_INT_RGB)
         qg (.createGraphics qim)
         outfile (str prefix (- zoom 1) "/" (/ x 2) "/" (/ y 2) ".png")
+        outfile-existed (file-exists? outfile)
+        partfile (str outfile "_part")
+        part-existed (file-exists? partfile)
+        core-tiles (for [cx (range (- x 0) (+ x 2)) cy (range (- y 0) (+ y 2))] [zoom cx cy])
         in-tiles (for [cx (range (- x 1) (+ x 3)) cy (range (- y 1) (+ y 3))] [zoom cx cy])]
+    (println (str "downsample: " zoom "," x "," y))
+    ; if even x,y and no final outfile and all 4 core pieces are there...
     (if (and (even? x)
              (even? y)
-             (not (file-exists? outfile))
-             (every? (partial apply tile-exists?) in-tiles))
+             (or part-existed (not outfile-existed))
+             (every? (partial apply tile-exists?) core-tiles))
       (do
+        (.setColor g Color/lightGray)
+        (.fillRect g 0 0 1024 1024)
         (doseq [xs (range 4)]
           (let [cx (+ x xs -1)]
             (doseq [ys (range 4)]
               (let [cy (+ y ys -1)
                     infile  (str prefix zoom "/" cx "/" cy ".png")]
                 ; (println (str "processing " cx "," cy))
-                (.drawImage g
-                  (ImageIO/read (File. infile))
-                  (* 256 xs) (* 256 ys) Color/black nil)
-                ))))
+                (if (file-exists? infile)
+                  (.drawImage g
+                    (ImageIO/read (File. infile))
+                    (* 256 xs) (* 256 ys) Color/black nil)
+                  )))))
         ; (write-file im "test.png")
         (.setRenderingHint hg RenderingHints/KEY_INTERPOLATION
                            RenderingHints/VALUE_INTERPOLATION_BICUBIC)
         (.drawImage hg im 0 0 512 512 nil)
         ; (write-file him "half.png")
         (.drawImage qg him 0 0 256 256 128 128 384 384 nil)
+        (println (str "Writing: " outfile))
         (jio/make-parents outfile)
         (write-file qim outfile)
+        ; note if this is the 'final version'
+        (if (every? (partial apply tile-exists?) in-tiles)
+          ; remove part file if there
+          (if part-existed (remove-file partfile))
+          ; put there if missing
+          (if-not part-existed (write-empty-file partfile)))
         true)
       false)
     ; (write-file qim "tile.png")
