@@ -3,31 +3,11 @@
            (java.awt Color RenderingHints)
            (java.awt.image BufferedImage)
            (java.io File IOException))
-  (:require [clojure.java.io :as jio])
+  (:require [clojure.java.io :as jio]
+            [resizer.localfile :refer [write-file write-empty-file
+              remove-file prefix to-file-name file-exists? tile-exists?]
+            ])
   (:gen-class))
-
-(defn write-file [im s]
-  (try
-    (ImageIO/write im "png" (File. s))
-    (catch IOException e (str "file - " s " - caught exception: " (.getMessage e)))
-    ))
-
-(defn write-empty-file [s]
-  (spit s "empty"))
-
-(defn remove-file [s]
-  (jio/delete-file s))
-
-(def prefix "/NoBackup/test/")
-
-(defn to-file-name [zoom x y]
-  (str prefix zoom "/" x "/" y ".png"))
-
-(defn file-exists? [s]
-  (.exists (jio/as-file s)))
-
-(defn tile-exists? [zoom x y]
-  (file-exists? (to-file-name zoom x y)))
 
 ; resize a file like ../18/0/0.png to ../17/0/0.png
 (defn down-sample [zoom x y]
@@ -98,6 +78,7 @@
     (if (not (every? (partial apply tile-exists?) out-tiles))
       (do
 
+        (println (str "Upsampling: " zoom "," x "," y))
         (.setRenderingHint hg RenderingHints/KEY_INTERPOLATION
                            RenderingHints/VALUE_INTERPOLATION_NEAREST_NEIGHBOR)
         ; (println (str "reading " infile))

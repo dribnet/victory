@@ -1,13 +1,12 @@
 (ns resizer.deposit
   (:require [resizer.core :refer [down-sample up-sample]]
             [kestrel.client :as kestrel]
-            [aws.sdk.s3 :as s3]
             [clojure.tools.reader.edn :refer [read-string]]))
 
 (def ref-layer 60)
 (def last-layer 63)
 
-(defn queue-task []
+(defn queue-task-dpwn []
   (print "+") 
   (flush)
   (doseq [x (range -640 (+ -640 16))]
@@ -19,6 +18,18 @@
           :y y
           :neighbors false
         })))))
+
+(defn queue-task []
+  (print "+") 
+  (flush)
+  (doseq [zoom (range 60 64)]
+    (kestrel/set-item "tiles" (pr-str {
+        :action :upsample,
+        :zoom zoom
+        :x 0
+        :y 0
+        :neighbors false
+      }))))
 
 (defn show-task []
   (let [x (read-string (kestrel/get-item "tiles"))]

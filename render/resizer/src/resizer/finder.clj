@@ -1,10 +1,14 @@
 (ns resizer.finder
-  (:require [resizer.core :refer [tile-exists? down-sample up-sample]])
+  (:require [resizer.core :refer [down-sample up-sample]]
+            [resizer.localfile :refer [tile-exists?]]
+            [clojure.edn]
+  )
   (:import (javax.imageio ImageIO)
            (java.awt Color RenderingHints)
            (java.awt.image BufferedImage)
            (java.io File IOException))
-  (:require [clojure.java.io :as jio]))
+  (:require [clojure.java.io :as jio])
+  (:gen-class))
 
 (defn process-exists1 [z x y]
   (if (and (< -3 x 3) (< -3 y 3))
@@ -43,6 +47,7 @@
         sum))))
 
 (defn layer-sweep [z]
+  (println (str "layer sweep: " z))
   (+ (sweep-quadrant z  0  0 inc inc)
      (sweep-quadrant z -1  0 dec inc)
      (sweep-quadrant z  0 -1 inc dec)
@@ -57,10 +62,9 @@
              (not (zero? (layer-sweep ix))))
       (recur (inc ix)))))
 
-
 (defn -main
   "I don't do a whole lot."
   [& args]
-  (up-sample 18 0 0)
-  (down-sample 18 0 0)
-  (println "Hello, World!"))
+  (if (> (count args) 0)
+    (layer-sweep (clojure.edn/read-string (first args)))
+    (full-sweep)))

@@ -8,4 +8,4 @@
            [org.clojure/tools.reader "0.7.4"]
            [kestrel-client/kestrel-client "0.1.0"]
   				 [zookeeper-clj "0.9.1"]]
-  :main resizer.deposit)
+  :main resizer.finder)

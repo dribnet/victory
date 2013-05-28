@@ -27,5 +27,5 @@
 (defn -main
   [& args]
   (println "Running tile worker")
-  (kestrel/default-client) ;; use default settings
+  (kestrel/default-client :host "54.243.14.151" :port 22133) ;; use default settings
   (while true (process-one)))
