@@ -21,13 +21,16 @@
 (def last-layer 63)
 
 (defn process-exists [z x y]
+  (Thread/sleep 500)
   (if (tile-exists? z x y)
     (do
       (println (str "processing " z "," x "," y))
       (if (<= z ref-layer)
-        (down-sample z x y))
+        (if (down-sample z x y)
+          (Thread/sleep 2000)))
       (if (>= z ref-layer)
-        (up-sample z x y))
+        (if (up-sample z x y)
+          (Thread/sleep 2000)))
       true)
     false))
 
