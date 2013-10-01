@@ -1,8 +1,9 @@
 (ns resizer.localfile
   (:import (javax.imageio ImageIO)
            (java.io File IOException))
-  (:require [clojure.java.io :as jio])
-  (:gen-class))
+  (:require [clojure.java.io :as jio]))
+
+(def local-cache "/tmp/fetcher/")
 
 (defn write-file [im s]
   (try
@@ -16,13 +17,24 @@
 (defn remove-file [s]
   (jio/delete-file s))
 
-(def prefix "./")
-
 (defn to-file-name [zoom x y]
-  (str prefix zoom "/" x "/" y ".png"))
+  (str local-cache zoom "/" x "/" y ".png"))
 
 (defn file-exists? [s]
   (.exists (jio/as-file s)))
 
 (defn tile-exists? [zoom x y]
   (file-exists? (to-file-name zoom x y)))
+
+(defn delete-file-recursively
+  "Delete file f. If it's a directory, recursively delete all its contents.
+Raise an exception if any deletion fails unless silently is true."
+  [f & [silently]]
+  (let [f (jio/file f)]
+    (if (.isDirectory f)
+      (doseq [child (.listFiles f)]
+        (delete-file-recursively child silently)))
+    (jio/delete-file f silently)))
+
+(defn clear-cache []
+  (delete-file-recursively local-cache true))

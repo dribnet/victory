@@ -1,5 +1,5 @@
 (ns resizer.finder
-  (:require [resizer.core :refer [down-sample up-sample]]
+  (:require [resizer.imageops :refer [down-sample up-sample]]
             [resizer.localfile :refer [tile-exists?]]
             [clojure.edn]
   )

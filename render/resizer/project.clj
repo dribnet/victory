@@ -12,5 +12,5 @@
            [kestrel-client/kestrel-client "0.1.0"]
   				 ; [zookeeper-clj "0.9.1"]
            ]
-  :aot [resizer.fetcher]
+  :aot [resizer.fetcher resizer.imageops resizer.core]
   :main resizer.finder)
