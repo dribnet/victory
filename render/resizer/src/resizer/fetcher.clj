@@ -4,7 +4,7 @@
             [defmain.core :refer [defmain]]
             [clojure.java.io :refer [output-stream file copy make-parents]]
             [aws.sdk.s3 :as s3]
-            [resizer.localfile :refer [local-cache]]
+            [resizer.localfile :refer [local-cache file-exists?]]
             [environ.core :refer [env]]))
 
 (def aws-creds
@@ -31,19 +31,20 @@
 
 (defn fetch-file [s missing-is-error]
   "fetch a file optionally allowing it to be missing"
-  (try
-    (if missing-is-error
-      (fetch-file-strict s)
-      (fetch-file-allow-missing s))
-    (catch Exception e 
-      (binding [*out* *err*]
-        (println (str "Error fetching " s " with setting " missing-is-error)))
-      (throw e))))
+  (if-not (file-exists? (str local-cache s))
+    (try
+      (if missing-is-error
+        (fetch-file-strict s)
+        (fetch-file-allow-missing s))
+      (catch Exception e 
+        (binding [*out* *err*]
+          (println (str "Error fetching " s " with setting " missing-is-error)))
+        (throw e)))))
   
 (defn fetch-strip [depth xmin xmax ymin ymax]
   "grab all tiles in bounding box and try to grab bordering tiles too"
   (doall (for [x (range (- xmin 1) (+ xmax 1)) y (range (- ymin 1) (+ ymax 1))]
-    (fetch-file (str depth "/" x "/" y ".png") (and (< (- xmin 1) x xmax) (< (- ymin 1) y ymax))))))
+    (fetch-file (str depth "/" x "/" y ".png") (and (< (- xmin 1) x xmax) (< (- ymin 1) y ymax))]))))
 
 (defmain hello [gretee]
   (println (str "hello " gretee)))
