@@ -1,8 +1,10 @@
 (ns resizer.core
   (:require [defmain.core :refer [defmain]]
+            [cemerick.bandalore :as sqs]
+            [clojure.tools.reader.edn :as edn]
             [resizer.localfile :refer [clear-cache]]
             [resizer.imageops :refer [downsample-strip upsample-strip]]
-            [resizer.fetcher  :refer [fetch-strip upsample-upload downsample-upload]]))
+            [resizer.fetcher  :refer [aws-creds fetch-strip upsample-upload downsample-upload]]))
 
 (defn down-pyramid [depth xmin xmax ymin ymax]
   (fetch-strip depth xmin xmax ymin ymax)
@@ -16,19 +18,51 @@
 
 (defn process-request [{:keys [command depth xmin xmax ymin ymax]}]
   (println (str "processing: " command ":" xmin " -> " xmax "," ymin " -> " ymax))
-  (fetch-strip depth xmin xmax ymin ymax)
-  (case command
-    :downsample 
-      (do
-        (println "downsampling")
-        (downsample-strip depth xmin xmax ymin ymax)
-        (downsample-upload depth xmin xmax ymin ymax))
-    :upsample
-      (do
-        (println "upsampling")
-        (upsample-strip depth xmin xmax ymin ymax)
-        (upsample-upload depth xmin xmax ymin ymax))
-    (println (str "unknown command: " command))))
+  (if-not (nil? command)
+    (do
+      (fetch-strip depth xmin xmax ymin ymax)
+      (case command
+        :downsample 
+          (do
+            (println "downsampling")
+            (downsample-strip depth xmin xmax ymin ymax)
+            (downsample-upload depth xmin xmax ymin ymax))
+        :upsample
+          (do
+            (println "upsampling")
+            (upsample-strip depth xmin xmax ymin ymax)
+            (upsample-upload depth xmin xmax ymin ymax))
+        (println (str "unknown command: " command))))))
+
+(defn make-client []
+  (sqs/create-client (:access-key aws-creds) (:secret-key aws-creds)))
+
+(defmain createq [qname]
+  (let [client (make-client)]
+    (println (pr-str (sqs/create-queue client qname)))))
+
+(defmain listqs []
+  (println (str "OK " (:access-key aws-creds)))
+  (let [client (make-client)]
+    (println (pr-str (sqs/list-queues client)))))
+
+(defmain delq [qname]
+  (let [client (make-client)]
+    (println (pr-str (sqs/delete-queue client qname)))))
+
+(defmain processQueue []
+  (let [client (make-client)]
+    (while true
+      (let [qname "https://sqs.us-east-1.amazonaws.com/864287020871/victory"
+            mes (first (sqs/receive client qname))]
+        (if (nil? mes)
+          (do
+            (println "queue is finally empty")
+            (System/exit 0))
+          (do
+            (println (str "processing message " (:body mes)))
+            (process-request (edn/read-string (:body mes)))
+            (sqs/delete client qname mes)))))))
 
 (defmain testrequest
   [& args]
