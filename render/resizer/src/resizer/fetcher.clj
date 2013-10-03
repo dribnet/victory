@@ -31,6 +31,7 @@
 
 (defn fetch-file [s missing-is-error]
   "fetch a file optionally allowing it to be missing"
+  (println (str "fetchfile: " s))
   (if-not (file-exists? (str local-cache s))
     (try
       (if missing-is-error
@@ -43,8 +44,29 @@
   
 (defn fetch-strip [depth xmin xmax ymin ymax]
   "grab all tiles in bounding box and try to grab bordering tiles too"
-  (doall (for [x (range (- xmin 1) (+ xmax 1)) y (range (- ymin 1) (+ ymax 1))]
-    (fetch-file (str depth "/" x "/" y ".png") (and (< (- xmin 1) x xmax) (< (- ymin 1) y ymax))]))))
+  (let [load-pairs (for [x (range (- xmin 1) (+ xmax 1)) y (range (- ymin 1) (+ ymax 1))]
+          [(str depth "/" x "/" y ".png") (and (< (- xmin 1) x xmax) (< (- ymin 1) y ymax))])]
+    (doall (pmap #(apply fetch-file %) load-pairs))))
+
+(defn save-file [s]
+  "given one file like '60/639/639.png', push to s3"
+  (println (str "savefile: " s))
+  (let [src (file local-cache s)]
+    (s3/put-object aws-creds remote-bucket (str remote-prefix s) src)))
+
+(defn downsample-upload [depth xmin xmax ymin ymax]
+  "upload results of downsampling strip"
+  (let [dec-depth (dec depth)
+        file-list (for [x (range xmin xmax 2) y (range ymin ymax 2)]
+          (str dec-depth "/" (/ x 2) "/" (/ y 2) ".png"))]
+    (doall (pmap #(save-file %) file-list))))
+
+(defn upsample-upload [depth xmin xmax ymin ymax]
+  "upload results of upsampling strip"
+  (let [inc-depth (inc depth)
+        file-list (for [x (range xmin xmax) y (range ymin ymax) dx (range 2) dy (range 2)]
+          (str inc-depth "/" (+ (* x 2) dx) "/" (+ (* y 2) dy) ".png"))]
+    (doall (pmap #(save-file %) file-list))))
 
 (defmain hello [gretee]
   (println (str "hello " gretee)))
