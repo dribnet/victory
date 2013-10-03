@@ -50,11 +50,12 @@
   (let [client (make-client)]
     (println (pr-str (sqs/delete-queue client qname)))))
 
+(def qname "https://sqs.us-east-1.amazonaws.com/864287020871/victory")
+
 (defmain processQueue []
   (let [client (make-client)]
     (while true
-      (let [qname "https://sqs.us-east-1.amazonaws.com/864287020871/victory"
-            mes (first (sqs/receive client qname))]
+      (let [mes (first (sqs/receive client qname))]
         (if (nil? mes)
           (do
             (println "queue is finally empty")
@@ -63,6 +64,19 @@
             (println (str "processing message " (:body mes)))
             (process-request (edn/read-string (:body mes)))
             (sqs/delete client qname mes)))))))
+
+(defmain populateQueue []
+  (let [client (make-client)]
+    (doall (for [x (range -640 640 32) y (range -640 640 32)]
+      (sqs/send client qname (pr-str {
+      ; (println (pr-str {
+        :command :downsample
+        :depth 60
+        :xmin x
+        :xmax (+ x 32)
+        :ymin y
+        :ymax (+ y 32)
+        }))))))
 
 (defmain testrequest
   [& args]
